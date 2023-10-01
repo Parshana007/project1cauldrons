@@ -22,7 +22,7 @@ def get_inventory():
     result = execute_sql("SELECT num_red_potions FROM global_inventory")
     nums_red_potions = result.num_red_potions
     result = execute_sql("SELECT ml_in_barrels FROM global_inventory") 
-    ml_per_barrel = result.ml_in_barrels
+    ml_per_barrel = result.num_red_ml
     result = execute_sql("SELECT gold FROM global_inventory")
     gold_total = result.gold
     
