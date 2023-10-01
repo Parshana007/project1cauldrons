@@ -19,9 +19,12 @@ def execute_sql(query):
 @router.get("/inventory")
 def get_inventory():
     """ """
-    nums_red_potions = execute_sql("SELECT num_red_potions FROM global_inventory").num_red_potions  
-    ml_per_barrel = execute_sql("SELECT ml_in_barrels FROM global_inventory").ml_in_barrels  
-    gold_total = execute_sql("SELECT gold FROM global_inventory").gold
+    result = execute_sql("SELECT num_red_potions FROM global_inventory")
+    nums_red_potions = result.num_red_potions
+    result = execute_sql("SELECT ml_in_barrels FROM global_inventory") 
+    ml_per_barrel = result.ml_in_barrels
+    result = execute_sql("SELECT gold FROM global_inventory")
+    gold_total = result.gold
     
     return {"number_of_potions": nums_red_potions, "ml_in_barrels": ml_per_barrel, "gold": gold_total}
 
