@@ -14,7 +14,7 @@ router = APIRouter(
 def execute_sql(query):
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text(query))
-        return result
+        return result.first()
 
 @router.get("/inventory")
 def get_inventory():
