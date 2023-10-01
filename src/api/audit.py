@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api import auth
 import math
+import sqlalchemy
+from src import database as db
 
 router = APIRouter(
     prefix="/audit",
@@ -9,11 +11,19 @@ router = APIRouter(
     dependencies=[Depends(auth.get_api_key)],
 )
 
+def execute_sql(query):
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text(query))
+        return result
+
 @router.get("/inventory")
 def get_inventory():
     """ """
+    nums_red_potions = execute_sql("SELECT num_red_potions FROM global_inventory").num_red_potions  
+    ml_per_barrel = execute_sql("SELECT ml_in_barrels FROM global_inventory").ml_in_barrels  
+    gold_total = execute_sql("SELECT gold FROM global_inventory").gold
     
-    return {"number_of_potions": 0, "ml_in_barrels": 0, "gold": 0}
+    return {"number_of_potions": nums_red_potions, "ml_in_barrels": ml_per_barrel, "gold": gold_total}
 
 class Result(BaseModel):
     gold_match: bool
