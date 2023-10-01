@@ -28,6 +28,7 @@ class NewCart(BaseModel):
 @router.post("/")
 def create_cart(new_cart: NewCart):
     """ """
+    global cart_id_counter
     cart_id_counter += 1
     return {cart_id_counter: Customer(new_cart.customer, 0, 0)} # zero potions bought and zero gold paid
 
