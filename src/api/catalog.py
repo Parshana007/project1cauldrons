@@ -17,12 +17,16 @@ def get_catalog():
         result = connection.execute(sqlalchemy.text("SELECT num_red_potions FROM global_inventory"))
 
         red_potions = result.first()
+        nums_red_potions = red_potions.num_red_potions
+
+    if nums_red_potions == 0:
+        return []
 
     return [
             {
                 "sku": "RED_POTION_0",
                 "name": "red potion",
-                "quantity": red_potions.num_red_potions,
+                "quantity": nums_red_potions,
                 "price": 50,
                 "potion_type": [100, 0, 0, 0],
             }
