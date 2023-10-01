@@ -69,6 +69,9 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 total_barrels += 1
                 gold_amount -= Barrel.price
 
+    if total_barrels == 0:
+        return []
+
     return [
         {
             "sku": "SMALL_RED_BARREL",
