@@ -30,12 +30,13 @@ def create_cart(new_cart: NewCart):
     """ """
     global cart_id_counter
     cart_id_counter += 1
-    return {cart_id_counter: Customer(new_cart.customer, [0,0,0,0], 0)} # zero potions bought and zero gold paid
+    return {int(cart_id_counter) : Customer(new_cart.customer, [0,0,0,0], 0)} # zero potions bought and zero gold paid
 
 
 @router.get("/{cart_id}")
 def get_cart(cart_id: int): # ? what does this function do?
     """ """
+    # str_cart_id = str(cart_id)
     if cart_id in my_dict:
         return my_dict[cart_id] # return whole customer object
     else:
