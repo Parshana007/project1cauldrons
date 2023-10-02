@@ -4,6 +4,8 @@ from src import database as db
 
 router = APIRouter()
 
+# * this catalog is our own for each potion therefore has our own sku 
+# * while the barrels are from a wholesaler with their own sku
 
 @router.get("/catalog/", tags=["catalog"])
 def get_catalog():
@@ -16,8 +18,8 @@ def get_catalog():
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("SELECT num_red_potions FROM global_inventory"))
 
-        red_potions = result.first()
-        nums_red_potions = red_potions.num_red_potions
+    red_potions = result.first()
+    nums_red_potions = red_potions.num_red_potions
 
     if nums_red_potions == 0:
         return []

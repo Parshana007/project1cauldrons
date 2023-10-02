@@ -52,7 +52,7 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     my_dict[cart_id].potions_bought[0] = cart_item.quantity
     my_dict[cart_id].gold_paid = cart_item.quantity * 100
     # if str_cart_id in my_dict:
-    #     if item_sku == "RED_POTION_0": # ? What is the item_sku?
+    #     if item_sku == "RED_POTION_0": 
     #         my_dict[str_cart_id].potions_bought[0] += cart_item.quantity # ? Update only the red potions 
     #         my_dict[str_cart_id].gold_paid += 100 # each potion = 100 gold
 
@@ -65,6 +65,7 @@ class CartCheckout(BaseModel):
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout): # ? What is cart_checkout?
     """ """
+    total_potions_bought = 0
 
     for potion in my_dict[cart_id].potions_bought:
         total_potions_bought += potion
