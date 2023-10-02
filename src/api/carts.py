@@ -30,15 +30,14 @@ def create_cart(new_cart: NewCart):
     """ """
     global cart_id_counter
     cart_id_counter += 1
-    return {cart_id_counter : Customer(new_cart.customer, [0,0,0,0], 0)} # zero potions bought and zero gold paid
-
+    my_dict[cart_id_counter] = Customer(new_cart.customer, [0, 0, 0, 0], 0)
+    return {"cart_id" : cart_id_counter} 
 
 @router.get("/{cart_id}")
-def get_cart(cart_id: int): # ? what does this function do?
+def get_cart(cart_id: int): # ? what does this function return?
     """ """
-    str_cart_id = str(cart_id)
-    if str_cart_id in my_dict:
-        return my_dict[str_cart_id] # return whole customer object
+    if cart_id in my_dict:
+        return my_dict[cart_id] # return whole customer object
     else:
         return {} #cart_id doesn't exist
 
@@ -50,11 +49,12 @@ class CartItem(BaseModel):
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     """ """
-    str_cart_id = str(cart_id)
-    if str_cart_id in my_dict:
-        if item_sku == "RED_POTION_0": # ? What is the item_sku?
-            my_dict[str_cart_id].potions_bought[0] += cart_item.quantity # ? Update only the red potions 
-            my_dict[str_cart_id].gold_paid += 100 # each potion = 100 gold
+    my_dict[cart_id].potions_bought[0] = cart_item.quantity
+    my_dict[cart_id].gold_paid = cart_item.quantity * 100
+    # if str_cart_id in my_dict:
+    #     if item_sku == "RED_POTION_0": # ? What is the item_sku?
+    #         my_dict[str_cart_id].potions_bought[0] += cart_item.quantity # ? Update only the red potions 
+    #         my_dict[str_cart_id].gold_paid += 100 # each potion = 100 gold
 
     return "OK"
 
@@ -65,11 +65,12 @@ class CartCheckout(BaseModel):
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout): # ? What is cart_checkout?
     """ """
-    str_cart_id = str(cart_id)
 
-    for potion in my_dict[str_cart_id].potions_bought:
+    for potion in my_dict[cart_id].potions_bought:
         total_potions_bought += potion
-    total_gold_paid = my_dict[str_cart_id].gold_paid
+    
+    total_gold_paid = total_potions_bought * 100
+    my_dict[cart_id].gold_paid = my_dict[cart_id].gold_paid
 
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_red_potions = num_red_potions - {total_potions_bought}"))
