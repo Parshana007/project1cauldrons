@@ -30,7 +30,7 @@ def create_cart(new_cart: NewCart):
     """ """
     global cart_id_counter
     cart_id_counter += 1
-    return {cart_id_counter: Customer(new_cart.customer, 0, 0)} # zero potions bought and zero gold paid
+    return {cart_id_counter: Customer(new_cart.customer, [0,0,0,0], 0)} # zero potions bought and zero gold paid
 
 
 @router.get("/{cart_id}")
@@ -66,5 +66,9 @@ def checkout(cart_id: int, cart_checkout: CartCheckout): # ? What is cart_checko
     for potion in my_dict[cart_id].potions_bought:
         total_potions_bought += potion
     total_gold_paid = my_dict[cart_id].gold_paid
+
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_red_potions = num_red_potions - {total_potions_bought}"))
+        connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold + {total_gold_paid}"))
 
     return {"total_potions_bought": total_potions_bought, "total_gold_paid": total_gold_paid}
