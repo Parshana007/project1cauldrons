@@ -28,7 +28,9 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
             connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_red_ml = num_red_ml - {num_red_ml_total}"))
         with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_red_potions = num_red_potions + {total_red_potions}"))
-    
+
+        print(total_red_potions)
+        print(num_red_ml_total)
 
     return "OK"
 
@@ -52,6 +54,10 @@ def get_bottle_plan():
         num_red_ml_total = num_red_ml_row.num_red_ml
 
     total_red_potions = num_red_ml_total // 100
+
+    print(f"Total red potions: {total_red_potions}")
+    print(num_red_ml_total)
+
 
     if total_red_potions == 0:
         return [] #not enough ml to make a potion

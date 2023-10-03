@@ -34,8 +34,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]): #gives me a total num
             connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_red_ml = num_red_ml + {barrel_red_ml}"))
 
         with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold - {gold_amount}"))
-    
+            connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold - {gold_amount}"))    
 
     return "OK"
 
@@ -72,10 +71,10 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 gold_amount -= barrel.price
             else:
                 break
-            print(gold_amount)
-            print(barrel.price)
-            print(total_barrels)
-            print(len(wholesale_catalog))
+            # print(gold_amount)
+            # print(barrel.price)
+            # print(total_barrels)
+            # print(len(wholesale_catalog))
 
     if total_barrels == 0:
         return []
