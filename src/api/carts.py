@@ -69,6 +69,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout): # ? What is cart_checko
 
     for potion in my_dict[cart_id].potions_bought:
         total_potions_bought += potion
+
     
     total_gold_paid = total_potions_bought * 100
     my_dict[cart_id].gold_paid = my_dict[cart_id].gold_paid

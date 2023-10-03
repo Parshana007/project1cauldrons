@@ -27,9 +27,9 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]): #gives me a total num
     #The deliver should be adding ml and subtracting gold. But should be based on how much gold and ml you already have
 
     #get total red_ml from Barrel
-    for Barrel in barrels_delivered:
-        barrel_red_ml = Barrel.ml_per_barrel
-        gold_amount = Barrel.price
+    for barrel in barrels_delivered:
+        barrel_red_ml = barrel.ml_per_barrel
+        gold_amount = barrel.price
         with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_red_ml = num_red_ml + {barrel_red_ml}"))
 
@@ -62,12 +62,20 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         gold_amount = gold_row.gold
     
     total_barrels = 0
+    print("Gold", gold_amount)
+    print("Potions", nums_red_potions)
 
     if nums_red_potions < 10:
-        for Barrel in wholesale_catalog:
-            if Barrel.sku == "SMALL_RED_BARREL" and gold_amount >= Barrel.price:
+        for barrel in wholesale_catalog:
+            if barrel.sku == "SMALL_RED_BARREL" and gold_amount >= barrel.price:
                 total_barrels += 1
-                gold_amount -= Barrel.price
+                gold_amount -= barrel.price
+            else:
+                break
+            print(gold_amount)
+            print(barrel.price)
+            print(total_barrels)
+            print(len(wholesale_catalog))
 
     if total_barrels == 0:
         return []
