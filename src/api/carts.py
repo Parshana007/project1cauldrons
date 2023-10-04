@@ -14,12 +14,12 @@ router = APIRouter(
 class Customer:
     def __init__(self, name, potions_bought, gold_paid):
         self.name = name
-        self.potions_bought = potions_bought # ? Do I want this to be an array for diff kinds of potions
+        self.potions_bought = potions_bought
         self.gold_paid = gold_paid
 
 cart_id_counter = 0
 
-my_dict = {} # ? key is cart_id, value is Customer object, should this change
+my_dict = {} 
 
 class NewCart(BaseModel):
     customer: str
@@ -34,7 +34,7 @@ def create_cart(new_cart: NewCart):
     return {"cart_id" : cart_id_counter} 
 
 @router.get("/{cart_id}")
-def get_cart(cart_id: int): # ? what does this function return?
+def get_cart(cart_id: int): 
     """ """
     if cart_id in my_dict:
         return my_dict[cart_id] # return whole customer object
@@ -43,11 +43,11 @@ def get_cart(cart_id: int): # ? what does this function return?
 
 
 class CartItem(BaseModel):
-    quantity: int
+    quantity: int #? Does this just tell me total num of potions? How to separate by type?
 
 
 @router.post("/{cart_id}/items/{item_sku}")
-def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
+def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem): 
     """ """
     my_dict[cart_id].potions_bought[0] = cart_item.quantity
     my_dict[cart_id].gold_paid = cart_item.quantity * 100
@@ -60,10 +60,10 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
 
 
 class CartCheckout(BaseModel):
-    payment: str
+    payment: str #? What is this supposed to be?
 
 @router.post("/{cart_id}/checkout")
-def checkout(cart_id: int, cart_checkout: CartCheckout): # ? What is cart_checkout?
+def checkout(cart_id: int, cart_checkout: CartCheckout): 
     """ """
     total_potions_bought = 0
 
@@ -76,9 +76,9 @@ def checkout(cart_id: int, cart_checkout: CartCheckout): # ? What is cart_checko
         red_potions = result.first()
         nums_red_potions = red_potions.num_red_potions
 
-    if total_potions_bought > nums_red_potions:
+    if total_potions_bought > nums_red_potions: #? Do I need to check if customer can buy?
         total_potions_bought = nums_red_potions
-        
+
     total_gold_paid = total_potions_bought * 100
     my_dict[cart_id].gold_paid = my_dict[cart_id].gold_paid
 

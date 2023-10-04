@@ -28,7 +28,6 @@ def reset():
 def get_shop_info():
     """ """
 
-    # TODO: Change me!
     return {
         "shop_name": "Cabybara Cauldron",
         "shop_owner": "Parshana Sekhon",

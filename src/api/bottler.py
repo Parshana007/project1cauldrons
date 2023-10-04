@@ -29,8 +29,8 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
         with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_red_potions = num_red_potions + {total_red_potions}"))
 
-        print(total_red_potions)
-        print(num_red_ml_total)
+        # print(total_red_potions)
+        # print(num_red_ml_total)
 
     return "OK"
 
@@ -55,8 +55,8 @@ def get_bottle_plan():
 
     total_red_potions = num_red_ml_total // 100
 
-    print(f"Total red potions: {total_red_potions}")
-    print(num_red_ml_total)
+    # print(f"Total red potions: {total_red_potions}")
+    # print(num_red_ml_total)
 
 
     if total_red_potions == 0:

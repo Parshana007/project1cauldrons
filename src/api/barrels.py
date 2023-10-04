@@ -11,10 +11,10 @@ router = APIRouter(
 )
 
 class Barrel(BaseModel):
-    sku: str 
+    sku: str #? If we know the potion type, do we need sku? What do we do? 
 
     ml_per_barrel: int
-    potion_type: list[int]
+    potion_type: list[int] #? Does this tell me how many red, blue, green potions are in the barrel? How does this relate to quantity?
     price: int
 
     quantity: int
@@ -61,27 +61,21 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         gold_amount = gold_row.gold
     
     total_barrels = 0
-    print("Gold", gold_amount)
-    print("Potions", nums_red_potions)
+    # print("Gold", gold_amount)
+    # print("Potions", nums_red_potions)
 
     if nums_red_potions < 10:
         for barrel in wholesale_catalog:
             if barrel.sku == "SMALL_RED_BARREL" and gold_amount >= barrel.price:
                 total_barrels += 1
                 gold_amount -= barrel.price
-            else:
-                break
-            # print(gold_amount)
-            # print(barrel.price)
-            # print(total_barrels)
-            # print(len(wholesale_catalog))
 
     if total_barrels == 0:
         return []
 
     return [
         {
-            "sku": "SMALL_RED_BARREL",
+            "sku": "SMALL_RED_BARREL", 
             "quantity": total_barrels,
         }
     ]
