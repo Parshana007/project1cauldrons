@@ -70,7 +70,15 @@ def checkout(cart_id: int, cart_checkout: CartCheckout): # ? What is cart_checko
     for potion in my_dict[cart_id].potions_bought:
         total_potions_bought += potion
 
-    
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text("SELECT num_red_potions FROM global_inventory"))
+
+        red_potions = result.first()
+        nums_red_potions = red_potions.num_red_potions
+
+    if total_potions_bought > nums_red_potions:
+        total_potions_bought = nums_red_potions
+        
     total_gold_paid = total_potions_bought * 100
     my_dict[cart_id].gold_paid = my_dict[cart_id].gold_paid
 
