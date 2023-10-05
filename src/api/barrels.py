@@ -73,39 +73,42 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     gold_amount = query.gold
     
     total_barrels = 0
+    total_red_barrels = 0
+    total_green_barrels = 0
+    total_blue_barrels = 0
     # print("Gold", gold_amount)
     # print("Potions", nums_red_potions)
 
     if nums_red_potions < 10 or nums_green_potions < 10 or nums_blue_potions < 10:
         for barrel in wholesale_catalog:
             if "RED" in barrel.sku and gold_amount >= barrel.price:
-                total_red_barrels += 1
+                total_red_barrels += barrel.quantity
                 gold_amount -= barrel.price
             elif "GREEN" in barrel.sku and gold_amount >= barrel.price:
-                total_green_barrels += 1
+                total_green_barrels += barrel.quantity
                 gold_amount -= barrel.price
             elif "BLUE" in barrel.sku and gold_amount >= barrel.price:
-                total_blue_barrels += 1
+                total_blue_barrels += barrel.quantity
                 gold_amount -= barrel.price
 
     total_barrels = total_red_barrels + total_green_barrels + total_blue_barrels
     
-    if total_barrels == 0:
+    if total_barrels <= 0:
         return []
     
     total_barrels_list = []
 
-    if total_red_barrels != 0:
+    if total_red_barrels > 0:
         total_barrels_list.append({ 
                 "sku": "SMALL_RED_BARREL",
                 "quantity": total_red_barrels,
         })
-    if total_green_barrels != 0:
+    if total_green_barrels > 0:
         total_barrels_list.append({ 
                 "sku": "SMALL_GREEN_BARREL",
                 "quantity": total_green_barrels,
         })
-    if total_blue_barrels != 0:
+    if total_blue_barrels > 0:
         total_barrels_list.append({ 
                 "sku": "SMALL_BLUE_BARREL",
                 "quantity": total_blue_barrels,
