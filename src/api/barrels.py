@@ -34,15 +34,15 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]): #gives me a total num
     for barrel in barrels_delivered:
         print(barrel.sku)
         if "RED" in barrel.sku:
-            barrel_ml = barrel.ml_per_barrel
+            barrel_ml = barrel.ml_per_barrel * barrel.quantity
             gold_amount = barrel.price
             key = "RED"  
         elif "GREEN" in barrel.sku:
-            barrel_ml = barrel.ml_per_barrel
+            barrel_ml = barrel.ml_per_barrel * barrel.quantity
             gold_amount = barrel.price
             key = "GREEN"
         elif "BLUE" in barrel.sku:
-            barrel_ml = barrel.ml_per_barrel
+            barrel_ml = barrel.ml_per_barrel * barrel.quantity
             gold_amount = barrel.price
             key = "BLUE"
         with db.engine.begin() as connection:
