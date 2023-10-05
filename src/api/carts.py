@@ -49,12 +49,21 @@ class CartItem(BaseModel):
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem): 
     """ """
-    my_dict[cart_id].potions_bought[0] = cart_item.quantity
+    color_key = {
+        "RED": 0,
+        "GREEN": 1,
+        "BLUE": 2
+    }
+    # my_dict[cart_id].potions_bought[0] = cart_item.quantity
+    if "RED" in item_sku: 
+        key = "RED"
+    elif "GREEN" in item_sku:
+        key = "GREEN"
+    elif "BLUE" in item_sku:
+        key = "BLUE"
+
     my_dict[cart_id].gold_paid = cart_item.quantity * 100
-    # if str_cart_id in my_dict:
-    #     if item_sku == "RED_POTION_0": 
-    #         my_dict[str_cart_id].potions_bought[0] += cart_item.quantity # ? Update only the red potions 
-    #         my_dict[str_cart_id].gold_paid += 100 # each potion = 100 gold
+    my_dict[cart_id].potions_bought[color_key[key]] += cart_item.quantity  # each potion = 100 gold
 
     return "OK"
 
@@ -65,25 +74,30 @@ class CartCheckout(BaseModel):
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout): 
     """ """
-    total_potions_bought = 0
+    total_red_potions = my_dict[cart_id].potions_bought[0]
+    total_green_potions = my_dict[cart_id].potions_bought[1]
+    total_blue_potions = my_dict[cart_id].potions_bought[2]
 
-    for potion in my_dict[cart_id].potions_bought:
-        total_potions_bought += potion
+    total_potions_bought = total_red_potions + total_green_potions + total_blue_potions
 
-    with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT num_red_potions FROM global_inventory"))
+    # with db.engine.begin() as connection:
+    #     result = connection.execute(sqlalchemy.text("SELECT num_red_potions, num_green_potions, num_blue_potions FROM global_inventory"))
+    #     potions_row = result.first()
 
-        red_potions = result.first()
-        nums_red_potions = red_potions.num_red_potions
+    # nums_red_potions = potions_row.num_red_potions
+    # nums_green_potions = potions_row.num_green_potions
+    # nums_blue_potions = potions_row.num_blue_potions
 
-    if total_potions_bought > nums_red_potions: #? Do I need to check if customer can buy?
-        total_potions_bought = nums_red_potions
+    # if total_potions_bought > nums_red_potions: #? Do I need to check if customer can buy?
+    #     total_potions_bought = nums_red_potions
 
     total_gold_paid = total_potions_bought * 100
     my_dict[cart_id].gold_paid = my_dict[cart_id].gold_paid
 
     with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_red_potions = num_red_potions - {total_potions_bought}"))
+        connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_red_potions = num_red_potions - {total_red_potions}"))
+        connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_green_potions = num_green_potions - {total_green_potions}"))
+        connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_blue_potions = num_blue_potions - {total_blue_potions}"))
         connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold + {total_gold_paid}"))
 
     return {"total_potions_bought": total_potions_bought, "total_gold_paid": total_gold_paid}
