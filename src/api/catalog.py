@@ -45,7 +45,7 @@ def get_catalog():
                 "name": "green potion",
                 "quantity": nums_green_potions,
                 "price": 50,
-                "potion_type": [0, 100, 0, 0], # ! What does this 100 mean?????
+                "potion_type": [0, 100, 0, 0], 
         })
     if nums_blue_potions != 0:
         potion_list.append({ 

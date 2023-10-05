@@ -43,7 +43,7 @@ def get_cart(cart_id: int):
 
 
 class CartItem(BaseModel):
-    quantity: int #? Does this just tell me total num of potions? How to separate by type?
+    quantity: int 
 
 
 @router.post("/{cart_id}/items/{item_sku}")
@@ -62,8 +62,8 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     elif "BLUE" in item_sku:
         key = "BLUE"
 
-    my_dict[cart_id].gold_paid += cart_item.quantity * 100
-    my_dict[cart_id].potions_bought[color_key[key]] += cart_item.quantity  # each potion = 100 gold
+    my_dict[cart_id].gold_paid += cart_item.quantity * 50 # each potion = 50 gold
+    my_dict[cart_id].potions_bought[color_key[key]] += cart_item.quantity  
 
     return "OK"
 
@@ -88,9 +88,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     nums_green_potions = potions_row.num_green_potions
     nums_blue_potions = potions_row.num_blue_potions
 
-    total_potions_inventory = nums_red_potions + nums_green_potions + nums_blue_potions
-
-    if total_potions_bought > total_potions_inventory: #? Do I need to check if customer can buy?
+    if total_red_potions > nums_red_potions or total_green_potions > nums_green_potions or total_blue_potions > nums_blue_potions: #? Do I need to check if customer can buy?
         my_dict[cart_id].potions_bought[0] = 0
         my_dict[cart_id].potions_bought[1] = 0
         my_dict[cart_id].potions_bought[2] = 0
