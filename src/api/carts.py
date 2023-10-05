@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from pydantic import BaseModel
 from src.api import auth
 import sqlalchemy
@@ -62,7 +62,7 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     elif "BLUE" in item_sku:
         key = "BLUE"
 
-    my_dict[cart_id].gold_paid = cart_item.quantity * 100
+    my_dict[cart_id].gold_paid += cart_item.quantity * 100
     my_dict[cart_id].potions_bought[color_key[key]] += cart_item.quantity  # each potion = 100 gold
 
     return "OK"
@@ -80,19 +80,24 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
 
     total_potions_bought = total_red_potions + total_green_potions + total_blue_potions
 
-    # with db.engine.begin() as connection:
-    #     result = connection.execute(sqlalchemy.text("SELECT num_red_potions, num_green_potions, num_blue_potions FROM global_inventory"))
-    #     potions_row = result.first()
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text("SELECT num_red_potions, num_green_potions, num_blue_potions FROM global_inventory"))
+        potions_row = result.first()
 
-    # nums_red_potions = potions_row.num_red_potions
-    # nums_green_potions = potions_row.num_green_potions
-    # nums_blue_potions = potions_row.num_blue_potions
+    nums_red_potions = potions_row.num_red_potions
+    nums_green_potions = potions_row.num_green_potions
+    nums_blue_potions = potions_row.num_blue_potions
 
-    # if total_potions_bought > nums_red_potions: #? Do I need to check if customer can buy?
-    #     total_potions_bought = nums_red_potions
+    total_potions_inventory = nums_red_potions + nums_green_potions + nums_blue_potions
 
-    total_gold_paid = total_potions_bought * 100
-    my_dict[cart_id].gold_paid = my_dict[cart_id].gold_paid
+    if total_potions_bought > total_potions_inventory: #? Do I need to check if customer can buy?
+        my_dict[cart_id].potions_bought[0] = 0
+        my_dict[cart_id].potions_bought[1] = 0
+        my_dict[cart_id].potions_bought[2] = 0
+        my_dict[cart_id].gold_paid = 0
+        raise HTTPException(status_code=409, detail="Not enough potions in inventory")
+    
+    total_gold_paid = my_dict[cart_id].gold_paid
 
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_red_potions = num_red_potions - {total_red_potions}"))
