@@ -22,7 +22,7 @@ class Barrel(BaseModel):
 @router.post("/deliver")
 def post_deliver_barrels(barrels_delivered: list[Barrel]): #gives me a total num of barrels to be purchased
     """ """
-    print(barrels_delivered)
+    print("post_deliver_barrels:barrels_delivered ", barrels_delivered)
 
     color_key = {
         "RED": "num_red_ml",
@@ -32,25 +32,25 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]): #gives me a total num
     #The deliver should be adding ml and subtracting gold. But should be based on how much gold and ml you already have
     #get total red_ml from Barrel
     for barrel in barrels_delivered:
-        print(barrel.sku)
+        print("post_deliver_barrels: barrel.sku ", barrel.sku)
         if "RED" in barrel.sku:
             barrel_ml = barrel.ml_per_barrel * barrel.quantity
-            gold_amount = barrel.price
+            gold_amount = barrel.price * barrel.quantity
             key = "RED"  
         elif "GREEN" in barrel.sku:
             barrel_ml = barrel.ml_per_barrel * barrel.quantity
-            gold_amount = barrel.price
+            gold_amount = barrel.price * barrel.quantity
             key = "GREEN"
         elif "BLUE" in barrel.sku:
             barrel_ml = barrel.ml_per_barrel * barrel.quantity
-            gold_amount = barrel.price
+            gold_amount = barrel.price * barrel.quantity
             key = "BLUE"
         with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET {color_key[key]} = {color_key[key]} + {barrel_ml}"))
             connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold - {gold_amount}")) 
-        print(gold_amount)
-        print(barrel_ml)
-        print(barrel.potion_type)
+        print("post_deliver_barrels: gold_amount ", gold_amount)
+        print("post_deliver_barrels: barrel_ml ", barrel_ml)
+        print("post_deliver_barrels: barrel.potion_type", barrel.potion_type)
 
     return "OK"
 
@@ -59,7 +59,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]): #gives me a total num
 @router.post("/plan")
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
-    print(wholesale_catalog)
+    print("get_wholesale_purchase_plan: wholesale_catalog ", wholesale_catalog)
 
     #decision logic (like the conditional) should go into the plan, since that is where you do the planning
     #getting the num_red_potions
@@ -71,27 +71,42 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     nums_green_potions = query.num_green_potions
     nums_blue_potions = query.num_blue_potions
     gold_amount = query.gold
-    
+
+    print("get_wholesale_purchase_plan: nums_red_potions ", nums_red_potions)
+    print("get_wholesale_purchase_plan: nums_green_potions ", nums_green_potions)
+    print("get_wholesale_purchase_plan: nums_blue_potions ", nums_blue_potions)
+    print("get_wholesale_purchase_plan: gold_amount ", gold_amount)
+
     total_barrels = 0
     total_red_barrels = 0
     total_green_barrels = 0
     total_blue_barrels = 0
-    # print("Gold", gold_amount)
-    # print("Potions", nums_red_potions)
 
     if nums_red_potions < 10 or nums_green_potions < 10 or nums_blue_potions < 10:
         for barrel in wholesale_catalog:
-            if "RED" in barrel.sku and gold_amount >= barrel.price:
-                total_red_barrels += barrel.quantity
-                gold_amount -= barrel.price
-            elif "GREEN" in barrel.sku and gold_amount >= barrel.price:
-                total_green_barrels += barrel.quantity
-                gold_amount -= barrel.price
-            elif "BLUE" in barrel.sku and gold_amount >= barrel.price:
-                total_blue_barrels += barrel.quantity
-                gold_amount -= barrel.price
+            price_entire_barrel =  barrel.price * barrel.quantity #barrel.quanity is the cost per barrel
+            if price_entire_barrel > gold_amount:
+                quantity_to_purchase = price_entire_barrel // gold_amount
+            elif quantity_to_purchase < gold_amount:
+                quantity_to_purchase = gold_amount // price_entire_barrel
+
+            if quantity_to_purchase > 0:
+                if "RED" in barrel.sku:
+                    total_red_barrels += quantity_to_purchase
+                    gold_amount -= barrel.price * quantity_to_purchase
+                elif "GREEN" in barrel.sku:
+                    total_green_barrels += quantity_to_purchase
+                    gold_amount -= barrel.price * quantity_to_purchase
+                elif "BLUE" in barrel.sku:
+                    total_blue_barrels += quantity_to_purchase
+                    gold_amount -= barrel.price * quantity_to_purchase
 
     total_barrels = total_red_barrels + total_green_barrels + total_blue_barrels
+
+    print("get_wholesale_purchase_plan: total_barrels ", total_barrels)
+    print("get_wholesale_purchase_plan: total_red_barrels ", total_red_barrels)
+    print("get_wholesale_purchase_plan: total_green_barrels ", total_green_barrels)
+    print("get_wholesale_purchase_plan: total_blue_barrels ", total_blue_barrels)
     
     if total_barrels <= 0:
         return []
@@ -114,5 +129,6 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 "quantity": total_blue_barrels,
         })
 
+    print("get_wholesale_purchase_plan: total_barrels_list ", total_barrels_list)
 
     return total_barrels_list
