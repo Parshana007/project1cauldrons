@@ -10,6 +10,10 @@ router = APIRouter(
     dependencies=[Depends(auth.get_api_key)],
 )
 
+# * the total cost per barrel is the price to get how many barrels you want from one Barrel you
+# * multiply the price of the barrel by the quanitity 
+# * to get the ml you want to optimize by multiplying the ml_per_barrel by the quantity
+
 class Barrel(BaseModel):
     sku: str # this can be SMALL_RED_BARREL, SMALL_GREEN_BARREL, SMALL_BLUE_BARREL, MEDIUM_RED_BARREL, MEDIUM_GREEN_BARREL, MEDIUM_BLUE_BARREL, LARGE_RED_BARREL, LARGE_GREEN_BARREL, LARGE_BLUE_BARREL
 
@@ -81,6 +85,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     total_red_barrels = 0
     total_green_barrels = 0
     total_blue_barrels = 0
+    quantity_to_purchase = 0
 
     if nums_red_potions < 10 or nums_green_potions < 10 or nums_blue_potions < 10:
         for barrel in wholesale_catalog:
@@ -89,6 +94,9 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 quantity_to_purchase = price_entire_barrel // gold_amount
             elif quantity_to_purchase < gold_amount:
                 quantity_to_purchase = gold_amount // price_entire_barrel
+
+            print("get_wholesale_purchase_plan: quantity_to_purchase ", quantity_to_purchase)
+            print("get_wholesale_purchase_plan: price_entire_barrel ", price_entire_barrel)
 
             if quantity_to_purchase > 0:
                 if "RED" in barrel.sku:
