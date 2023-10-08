@@ -87,31 +87,24 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     total_blue_barrels = 0
     quantity_to_purchase = 0
 
-    if nums_red_potions < 10 or nums_green_potions < 10 or nums_blue_potions < 10:
-        for barrel in wholesale_catalog:
-            quantity_to_purchase = gold_amount // barrel.price
+    for barrel in wholesale_catalog:
+        quantity_to_purchase = gold_amount // barrel.price
 
-            # price_entire_barrel =  barrel.price * barrel.quantity #barrel.quanity is the cost per barrel
-            # if price_entire_barrel > gold_amount:
-            #     quantity_to_purchase = price_entire_barrel // gold_amount
-            # elif price_entire_barrel < gold_amount:
-            #     quantity_to_purchase = gold_amount // price_entire_barrel
+        print("get_wholesale_purchase_plan: quantity_to_purchase ", quantity_to_purchase)
 
-            print("get_wholesale_purchase_plan: quantity_to_purchase ", quantity_to_purchase)
+        if quantity_to_purchase > 0:
+            if quantity_to_purchase > barrel.quantity:
+                quantity_to_purchase = barrel.quantity
 
-            if quantity_to_purchase > 0:
-                if quantity_to_purchase > barrel.quantity:
-                    quantity_to_purchase = barrel.quantity
-
-                if "RED" in barrel.sku:
-                    total_red_barrels += quantity_to_purchase
-                    gold_amount -= barrel.price * quantity_to_purchase
-                elif "GREEN" in barrel.sku:
-                    total_green_barrels += quantity_to_purchase
-                    gold_amount -= barrel.price * quantity_to_purchase
-                elif "BLUE" in barrel.sku:
-                    total_blue_barrels += quantity_to_purchase
-                    gold_amount -= barrel.price * quantity_to_purchase
+            if "RED" in barrel.sku and nums_red_potions < 10:
+                total_red_barrels += quantity_to_purchase
+                gold_amount -= barrel.price * quantity_to_purchase
+            elif "GREEN" in barrel.sku and nums_green_potions < 10:
+                total_green_barrels += quantity_to_purchase
+                gold_amount -= barrel.price * quantity_to_purchase
+            elif "BLUE" in barrel.sku and nums_blue_potions < 10:
+                total_blue_barrels += quantity_to_purchase
+                gold_amount -= barrel.price * quantity_to_purchase
 
     total_barrels = total_red_barrels + total_green_barrels + total_blue_barrels
 
