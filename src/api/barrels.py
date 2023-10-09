@@ -96,13 +96,13 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
             if quantity_to_purchase > barrel.quantity:
                 quantity_to_purchase = barrel.quantity
 
-            if "RED" in barrel.sku and nums_red_potions < 2 and nums_red_potions > 1:
+            if "RED" in barrel.sku and nums_red_potions < 2 and nums_red_potions > 0:
                 total_red_barrels += quantity_to_purchase
                 gold_amount -= barrel.price * quantity_to_purchase
-            elif "GREEN" in barrel.sku and nums_green_potions < 2 and nums_green_potions > 1:
+            elif "GREEN" in barrel.sku and nums_green_potions < 2 and nums_green_potions > 0:
                 total_green_barrels += quantity_to_purchase
                 gold_amount -= barrel.price * quantity_to_purchase
-            elif "BLUE" in barrel.sku and nums_blue_potions < 2 and nums_blue_potions > 1:
+            elif "BLUE" in barrel.sku and nums_blue_potions < 2 and nums_blue_potions > 0:
                 total_blue_barrels += quantity_to_purchase
                 gold_amount -= barrel.price * quantity_to_purchase
 
