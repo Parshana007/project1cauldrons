@@ -21,8 +21,18 @@ def get_inventory():
     """ """
     result = execute_sql("SELECT num_red_potions, num_green_potions, num_blue_potions FROM global_inventory")
     nums_potions = result.num_red_potions + result.num_green_potions + result.num_blue_potions
+
+    print("get_inventory: red_potions ", result.num_red_potions)
+    print("get_inventory: green_potions ", result.num_green_potions)
+    print("get_inventory: blue_potions ", result.num_blue_potions)
+
     result = execute_sql("SELECT num_red_ml, num_green_ml, num_blue_ml FROM global_inventory") 
     ml_per_barrel = result.num_red_ml + result.num_green_ml + result.num_blue_ml
+
+    print("get_inventory: red_ml ", result.num_red_ml)
+    print("get_inventory: green_ml ", result.num_green_ml)
+    print("get_inventory: blue_ml ", result.num_blue_ml)
+
     result = execute_sql("SELECT gold FROM global_inventory")
     gold_total = result.gold
 
