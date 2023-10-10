@@ -114,6 +114,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     print("get_wholesale_purchase_plan: total_red_barrels ", total_red_barrels)
     print("get_wholesale_purchase_plan: total_green_barrels ", total_green_barrels)
     print("get_wholesale_purchase_plan: total_blue_barrels ", total_blue_barrels)
+    print("get_wholesale_purchase_plan: gold_amount ", gold_amount)
     
     if total_barrels <= 0:
         return []
