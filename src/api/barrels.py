@@ -87,26 +87,27 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     total_blue_barrels = 0
     quantity_to_purchase = 0
 
-    for barrel in wholesale_catalog:
-        quantity_to_purchase = gold_amount // barrel.price
+    if nums_red_potions < 2 or nums_green_potions < 2 or nums_blue_potions < 2:
+        for barrel in wholesale_catalog:
+            quantity_to_purchase = gold_amount // barrel.price
 
-        print("get_wholesale_purchase_plan: quantity_to_purchase ", quantity_to_purchase)
+            print("get_wholesale_purchase_plan: quantity_to_purchase ", quantity_to_purchase)
 
-        if quantity_to_purchase > 0:
-            # TODO works but for sake of grade run only buy one of each type [uncomment later]
-            # if quantity_to_purchase > barrel.quantity:      
-            #     quantity_to_purchase = barrel.quantity
+            if quantity_to_purchase > 0:
+                # TODO works but for sake of grade run only buy one of each type [uncomment later]
+                if quantity_to_purchase > barrel.quantity:      
+                    quantity_to_purchase = barrel.quantity
 
-            # TODO for sake of barrels only buy if the name is SMALL change back to just RED, GREEN, BLUE
-            if "SMALL_RED" in barrel.sku and nums_red_potions < 1 and total_red_barrels <= 0:
-                total_red_barrels += 1  # TODO change 1 back to quantity_to_purchase
-                gold_amount -= barrel.price #TODO change back to barrel.price * quantity_to_purchase
-            elif "SMALL_GREEN" in barrel.sku and nums_green_potions < 1 and total_green_barrels <= 0:
-                total_green_barrels += 1 # TODO change 1 back to quantity_to_purchase
-                gold_amount -= barrel.price #TODO change back to barrel.price * quantity_to_purchase
-            elif "SMALL_BLUE" in barrel.sku and nums_blue_potions < 1 and total_blue_barrels <= 0:
-                total_blue_barrels += 1 # TODO change 1 back to quantity_to_purchase
-                gold_amount -= barrel.price #TODO change back to barrel.price * quantity_to_purchase
+                # TODO for sake of barrels only buy if the name is SMALL change back to just RED, GREEN, BLUE
+                if "RED" in barrel.sku and total_red_barrels < 2:
+                    total_red_barrels += 1  # TODO change 1 back to quantity_to_purchase
+                    gold_amount -= barrel.price #TODO change back to barrel.price * quantity_to_purchase
+                elif "GREEN" in barrel.sku and total_green_barrels < 2:
+                    total_green_barrels += 1 # TODO change 1 back to quantity_to_purchase
+                    gold_amount -= barrel.price #TODO change back to barrel.price * quantity_to_purchase
+                elif "BLUE" in barrel.sku and total_blue_barrels < 2:
+                    total_blue_barrels += 1 # TODO change 1 back to quantity_to_purchase
+                    gold_amount -= barrel.price #TODO change back to barrel.price * quantity_to_purchase
 
     total_barrels = total_red_barrels + total_green_barrels + total_blue_barrels
 

@@ -62,7 +62,7 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     elif "BLUE" in item_sku:
         key = "BLUE"
 
-    my_dict[cart_id].gold_paid += cart_item.quantity * 5 # each potion = 5 gold
+    my_dict[cart_id].gold_paid += cart_item.quantity * 50 # each potion = 50 gold
     my_dict[cart_id].potions_bought[color_key[key]] += cart_item.quantity  
 
     return "OK"
