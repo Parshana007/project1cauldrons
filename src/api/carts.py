@@ -23,7 +23,7 @@ my_dict = {}
 
 class NewCart(BaseModel):
     customer: str
-
+ 
 
 @router.post("/")
 def create_cart(new_cart: NewCart):
