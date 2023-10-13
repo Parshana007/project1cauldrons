@@ -11,15 +11,15 @@ router = APIRouter(
     dependencies=[Depends(auth.get_api_key)],
 )
 
-class Customer:
-    def __init__(self, name, potions_bought, gold_paid):
-        self.name = name
-        self.potions_bought = potions_bought
-        self.gold_paid = gold_paid
+# class Customer:
+#     def __init__(self, name, potions_bought, gold_paid):
+#         self.name = name
+#         self.potions_bought = potions_bought
+#         self.gold_paid = gold_paid
 
-cart_id_counter = 0
+# cart_id_counter = 0
 
-my_dict = {} 
+# my_dict = {} 
 
 class NewCart(BaseModel):
     customer: str
@@ -28,10 +28,21 @@ class NewCart(BaseModel):
 @router.post("/")
 def create_cart(new_cart: NewCart):
     """ """
-    global cart_id_counter
-    cart_id_counter += 1
-    my_dict[cart_id_counter] = Customer(new_cart.customer, [0, 0, 0, 0], 0)
-    return {"cart_id" : cart_id_counter} 
+    # global cart_id_counter
+    # cart_id_counter += 1
+    # my_dict[cart_id_counter] = Customer(new_cart.customer, [0, 0, 0, 0], 0)
+    with db.engine.begin() as connection:
+        # get all of the potions that are not 0
+        result = connection.execute(
+            sqlalchemy.text(
+                """
+                INSERT INTO carts (customer_name, can_buy)
+                VALUES (:customer_name, :truthiness)
+                RETURNING cart_id"""
+        ), [{"customer_name" : new_cart.customer, "truthiness": False}]).scalar()
+
+    print("create_cart: result ", result)
+    return {"cart_id" : result} 
 
 @router.get("/{cart_id}")
 def get_cart(cart_id: int): 
