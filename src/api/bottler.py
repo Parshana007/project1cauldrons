@@ -21,37 +21,20 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     """ """
     print("post_deliver_bottles: potions_delivered", potions_delivered)
 
-    color_key = {
-        "num_red_potions": "num_red_ml",
-        "num_green_potions": "num_green_ml",
-        "num_blue_potions": "num_blue_ml"
-    }
 
-    for potions in potions_delivered:
-        if potions.potion_type[0] != 0: #red
-            total_potions = potions.quantity
-            num_ml_total = total_potions * 100
-            key = "num_red_potions"
-            print("post_deliver_bottles: total_potions_red ", total_potions)
-            # print(total_red_potions)
-            # print(num_red_ml_total)
-        elif potions.potion_type[1] != 0: #green
-            total_potions = potions.quantity
-            num_ml_total = total_potions * 100
-            key = "num_green_potions"
-            print("post_deliver_bottles: total_potions_green ", total_potions)
-            # print(total_green_potions)
-            # print(num_green_ml_total)
-        elif potions.potion_type[2] != 0: #blue
-            total_potions = potions.quantity
-            num_ml_total = total_potions * 100
-            key = "num_blue_potions"
-            print("post_deliver_bottles: total_potions_blue ", total_potions)
-            # print(total_blue_potions)
-            # print(num_blue_ml_total)
+    for potion in potions_delivered:
         with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET {color_key[key]} = {color_key[key]} - {num_ml_total}"))
-            connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET {key} = {key} + {total_potions}"))
+            connection.execute(
+                sqlalchemy.text(
+                """
+                UPDATE global_inventory SET 
+                num_red_ml = num_red_ml - :red_ml 
+                num_green_ml = num_green_ml - :green_ml
+                num_blue_ml = num_blue_ml - :blue_ml
+                num_dark_ml = num_dark_ml - :dark_ml
+                """
+                ),
+            [{"red_ml": potion.potion_type[0], "green_ml": potion.potion_type[1], "blue_ml": potion.potion_type[2], "dark_ml": potion.potion_type[3]}])
 
     return "OK"
 
@@ -67,42 +50,36 @@ def get_bottle_plan():
     # Expressed in integers from 1 to 100 that must sum up to 100.
 
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT num_red_ml, num_green_ml, num_blue_ml FROM global_inventory"))
+        ml_data_result = connection.execute(sqlalchemy.text("SELECT num_red_ml, num_green_ml, num_blue_ml, num_dark_ml FROM global_inventory"))
+        quantity_potions_result = connection.execute(sqlalchemy.text("SELECT quantity FROM potion_catalog WHERE quantity == 0"))
 
-        num_ml_data = result.first()
-    
-    total_red_potions = num_ml_data.num_red_ml // 100
-    total_green_potions = num_ml_data.num_green_ml // 100
-    total_blue_potions = num_ml_data.num_blue_ml // 100
+        num_ml_data = ml_data_result.first()
+        quantity_potions_result = quantity_potions_result.fetchall()
 
-    total_potions = total_red_potions + total_green_potions + total_blue_potions
+    num_red_ml = num_ml_data.num_red_ml
+    num_green_ml = num_ml_data.num_green_ml
+    num_blue_ml = num_ml_data.num_blue_ml
+    num_dark_ml = num_ml_data.num_dark_ml
+
+    potions_list = []
+
+    for potion in quantity_potions_result:
+        if potion.red_ml <= num_red_ml and potion.green_ml <= num_green_ml and potion.blue_ml <= num_blue_ml and potion.dark_ml <= num_dark_ml:
+
+            potions_list.append({
+                "potion_type": [potion.red_ml, potion.green_ml, potion.blue_ml, potion.dark_ml],
+                "quantity": 1
+            })
+
+            num_red_ml -= potion.red_ml
+            num_green_ml -= potion.green_ml
+            num_blue_ml -= potion.blue_ml
+            num_dark_ml -= potion.dark_ml
 
     print("get_bottle_plan: num_red_ml ", num_ml_data.num_red_ml)
     print("get_bottle_plan: num_green_ml ", num_ml_data.num_green_ml)
     print("get_bottle_plan: num_blue_ml ", num_ml_data.num_blue_ml)
-    print("get_bottle_plan: total_red_potions ", total_red_potions)
-    print("get_bottle_plan: total_green_potions ", total_green_potions)
-    print("get_bottle_plan: total_blue_potions ", total_blue_potions)
-
-    if total_potions == 0:
-        return [] #not enough ml to make a potion
-    
-    potions_list = []
-
-    if total_red_potions > 0:
-        potions_list.append({ 
-                "potion_type": [100, 0, 0, 0],
-                "quantity": total_red_potions,
-        })
-    if total_green_potions > 0:
-        potions_list.append({ 
-                "potion_type": [0, 100, 0, 0],
-                "quantity": total_green_potions,
-        })
-    if total_blue_potions > 0:
-        potions_list.append({ 
-                "potion_type": [0, 0, 100, 0],
-                "quantity": total_blue_potions,
-        })
+    print("get_bottle_plan: num_dark_ml ", num_ml_data.num_dark_ml)
+    print("get_bottle_plan: potions_list ", potions_list)
 
     return potions_list

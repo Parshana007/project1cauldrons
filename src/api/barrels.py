@@ -29,45 +29,51 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]): #gives me a total num
     print("post_deliver_barrels:barrels_delivered ", barrels_delivered)
 
     gold_count = 0
-    red_ml = 0
-    green_ml = 0
-    blue_ml = 0
-    dark_ml = 0
+    updated_red_ml = 0
+    updated_green_ml = 0
+    updated_blue_ml = 0
+    updated_dark_ml = 0
 
     for barrel in barrels_delivered:
         gold_count += barrel.price * barrel.quantity
         if barrel.potion_type == [1, 0, 0, 0]: # RED
-            red_ml += barrel.ml_per_barrel * barrel.quantity
+            updated_red_ml += barrel.ml_per_barrel * barrel.quantity
         elif barrel.potion_type == [0, 1, 0, 0]: # GREEN
-            green_ml += barrel.ml_per_barrel * barrel.quantity
+            updated_green_ml += barrel.ml_per_barrel * barrel.quantity
         elif barrel.potion_type == [0, 0, 1, 0]: # BLUE
-            blue_ml += barrel.ml_per_barrel * barrel.quantity
+            updated_blue_ml += barrel.ml_per_barrel * barrel.quantity
         elif barrel.potion_type == [0, 0, 0, 1]: # DARK
-            dark_ml += barrel.ml_per_barrel * barrel.quantity
+            updated_dark_ml += barrel.ml_per_barrel * barrel.quantity
         else:
             raise Exception("Invalid potion type")
+        
+        print("post_deliver_barrels: gold_amount ", gold_count)
+        print("post_deliver_barrels: red_ml ", updated_red_ml)
+        print("post_deliver_barrels: green_ml ", updated_green_ml)
+        print("post_deliver_barrels: blue_ml ", updated_blue_ml)
+        print("post_deliver_barrels: dark_ml ", updated_dark_ml)
 
     with db.engine.begin() as connection:
         connection.execute(
             sqlalchemy.text(
                 """
                 UPDATE global_inventory SET 
-                red_ml = red_ml + :red_ml 
-                green_ml = green_ml + :green_ml
-                blue_ml = blue_ml + :blue_ml
-                dark_ml = dark_ml + :dark_ml
+                num_red_ml = num_red_ml + :updated_red_ml,
+                num_green_ml = num_green_ml + :updated_green_ml,
+                num_blue_ml = num_blue_ml + :updated_blue_ml,
+                num_dark_ml = num_dark_ml + :updated_dark_ml,
                 gold = gold - :gold_count
                 """
                 ),
-            [{"red_ml": red_ml, "green_ml": green_ml, "blue_ml": blue_ml, "dark_ml": dark_ml, "gold_count": gold_count}])
+            [{"updated_red_ml": updated_red_ml, "updated_green_ml": updated_green_ml, "updated_blue_ml": updated_blue_ml, "updated_dark_ml": updated_dark_ml, "gold_count": gold_count}])
 
 
         print("post_deliver_barrels: gold_amount ", gold_count)
-        print("post_deliver_barrels: red_ml ", red_ml)
-        print("post_deliver_barrels: green_ml ", green_ml)
-        print("post_deliver_barrels: blue_ml ", blue_ml)
-        print("post_deliver_barrels: dark_ml ", dark_ml)
-        print("post_deliver_barrels: barrel.potion_type", barrel.potion_type)
+        print("post_deliver_barrels: red_ml ", updated_red_ml)
+        print("post_deliver_barrels: green_ml ", updated_green_ml)
+        print("post_deliver_barrels: blue_ml ", updated_blue_ml)
+        print("post_deliver_barrels: dark_ml ", updated_dark_ml)
+        # print("post_deliver_barrels: barrel.potion_type", barrel.potion_type)
 
     return "OK"
 
