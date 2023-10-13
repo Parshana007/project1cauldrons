@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from src.api import auth
 import sqlalchemy
@@ -28,32 +28,45 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]): #gives me a total num
     """ """
     print("post_deliver_barrels:barrels_delivered ", barrels_delivered)
 
-    color_key = {
-        "RED": "num_red_ml",
-        "GREEN": "num_green_ml",
-        "BLUE": "num_blue_ml"
-    }
-    #The deliver should be adding ml and subtracting gold. But should be based on how much gold and ml you already have
-    #get total red_ml from Barrel
+    gold_count = 0
+    red_ml = 0
+    green_ml = 0
+    blue_ml = 0
+    dark_ml = 0
+
     for barrel in barrels_delivered:
-        print("post_deliver_barrels: barrel.sku ", barrel.sku)
-        if "RED" in barrel.sku:
-            barrel_ml = barrel.ml_per_barrel * barrel.quantity
-            gold_amount = barrel.price * barrel.quantity
-            key = "RED"  
-        elif "GREEN" in barrel.sku:
-            barrel_ml = barrel.ml_per_barrel * barrel.quantity
-            gold_amount = barrel.price * barrel.quantity
-            key = "GREEN"
-        elif "BLUE" in barrel.sku:
-            barrel_ml = barrel.ml_per_barrel * barrel.quantity
-            gold_amount = barrel.price * barrel.quantity
-            key = "BLUE"
-        with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET {color_key[key]} = {color_key[key]} + {barrel_ml}"))
-            connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold - {gold_amount}")) 
-        print("post_deliver_barrels: gold_amount ", gold_amount)
-        print("post_deliver_barrels: barrel_ml ", barrel_ml)
+        gold_count += barrel.price * barrel.quantity
+        if barrel.potion_type == [1, 0, 0, 0]: # RED
+            red_ml += barrel.ml_per_barrel * barrel.quantity
+        elif barrel.potion_type == [0, 1, 0, 0]: # GREEN
+            green_ml += barrel.ml_per_barrel * barrel.quantity
+        elif barrel.potion_type == [0, 0, 1, 0]: # BLUE
+            blue_ml += barrel.ml_per_barrel * barrel.quantity
+        elif barrel.potion_type == [0, 0, 0, 1]: # DARK
+            dark_ml += barrel.ml_per_barrel * barrel.quantity
+        else:
+            raise Exception("Invalid potion type")
+
+    with db.engine.begin() as connection:
+        connection.execute(
+            sqlalchemy.text(
+                """
+                UPDATE global_inventory SET 
+                red_ml = red_ml + :red_ml 
+                green_ml = green_ml + :green_ml
+                blue_ml = blue_ml + :blue_ml
+                dark_ml = dark_ml + :dark_ml
+                gold = gold - :gold_count
+                """
+                ),
+            [{"red_ml": red_ml, "green_ml": green_ml, "blue_ml": blue_ml, "dark_ml": dark_ml, "gold_count": gold_count}])
+
+
+        print("post_deliver_barrels: gold_amount ", gold_count)
+        print("post_deliver_barrels: red_ml ", red_ml)
+        print("post_deliver_barrels: green_ml ", green_ml)
+        print("post_deliver_barrels: blue_ml ", blue_ml)
+        print("post_deliver_barrels: dark_ml ", dark_ml)
         print("post_deliver_barrels: barrel.potion_type", barrel.potion_type)
 
     return "OK"
@@ -68,53 +81,53 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     #decision logic (like the conditional) should go into the plan, since that is where you do the planning
     #getting the num_red_potions
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT num_red_potions, num_green_potions, num_blue_potions, gold FROM global_inventory"))
+        result = connection.execute(sqlalchemy.text("SELECT num_red_ml, num_green_ml, num_blue_ml, num_dark_ml, gold FROM global_inventory"))
         query = result.first()
     
-    nums_red_potions = query.num_red_potions
-    nums_green_potions = query.num_green_potions
-    nums_blue_potions = query.num_blue_potions
+    num_red_ml = query.num_red_ml
+    num_green_ml = query.num_green_ml
+    num_blue_ml = query.num_blue_ml
+    num_dark_ml = query.num_dark_ml
     gold_amount = query.gold
 
-    print("get_wholesale_purchase_plan: nums_red_potions ", nums_red_potions)
-    print("get_wholesale_purchase_plan: nums_green_potions ", nums_green_potions)
-    print("get_wholesale_purchase_plan: nums_blue_potions ", nums_blue_potions)
+    print("get_wholesale_purchase_plan: num_red_ml ", num_red_ml)
+    print("get_wholesale_purchase_plan: num_green_ml ", num_green_ml)
+    print("get_wholesale_purchase_plan: num_blue_ml ", num_blue_ml)
+    print("get_wholesale_purchase_plan: num_dark_ml ", num_dark_ml)
     print("get_wholesale_purchase_plan: gold_amount ", gold_amount)
 
     total_barrels = 0
     total_red_barrels = 0
     total_green_barrels = 0
     total_blue_barrels = 0
+    total_dark_barrels = 0
     quantity_to_purchase = 0
 
-    if nums_red_potions < 2 or nums_green_potions < 2 or nums_blue_potions < 2:
-        for barrel in wholesale_catalog:
-            quantity_to_purchase = gold_amount // barrel.price
+    for barrel in wholesale_catalog:
+        quantity_to_purchase = gold_amount // barrel.price
 
-            print("get_wholesale_purchase_plan: quantity_to_purchase ", quantity_to_purchase)
+        print("get_wholesale_purchase_plan: quantity_to_purchase ", quantity_to_purchase)
 
-            if quantity_to_purchase > 0:
-                # TODO works but for sake of grade run only buy one of each type [uncomment later]
-                if quantity_to_purchase > barrel.quantity:      
-                    quantity_to_purchase = barrel.quantity
+        if quantity_to_purchase > 0:
+            if barrel.potion_type == [1, 0, 0, 0] and total_red_barrels < 2:
+                total_red_barrels += 1  
+            elif barrel.potion_type == [0, 1, 0, 0] and total_green_barrels < 2:
+                total_green_barrels += 1 
+            elif barrel.potion_type == [0, 0, 1, 0] and total_blue_barrels < 2:
+                total_blue_barrels += 1 
+            elif barrel.potion_type == [0, 0, 0, 1] and total_dark_barrels < 2:
+                total_dark_barrels += 1
+            else:
+                raise Exception("Invalid potion type")
+            gold_amount -= barrel.price 
 
-                # TODO for sake of barrels only buy if the name is SMALL change back to just RED, GREEN, BLUE
-                if "RED" in barrel.sku and total_red_barrels < 2:
-                    total_red_barrels += 1  # TODO change 1 back to quantity_to_purchase
-                    gold_amount -= barrel.price #TODO change back to barrel.price * quantity_to_purchase
-                elif "GREEN" in barrel.sku and total_green_barrels < 2:
-                    total_green_barrels += 1 # TODO change 1 back to quantity_to_purchase
-                    gold_amount -= barrel.price #TODO change back to barrel.price * quantity_to_purchase
-                elif "BLUE" in barrel.sku and total_blue_barrels < 2:
-                    total_blue_barrels += 1 # TODO change 1 back to quantity_to_purchase
-                    gold_amount -= barrel.price #TODO change back to barrel.price * quantity_to_purchase
-
-    total_barrels = total_red_barrels + total_green_barrels + total_blue_barrels
+    total_barrels = total_red_barrels + total_green_barrels + total_blue_barrels + total_dark_barrels
 
     print("get_wholesale_purchase_plan: total_barrels ", total_barrels)
     print("get_wholesale_purchase_plan: total_red_barrels ", total_red_barrels)
     print("get_wholesale_purchase_plan: total_green_barrels ", total_green_barrels)
     print("get_wholesale_purchase_plan: total_blue_barrels ", total_blue_barrels)
+    print("get_wholesale_purchase_plan: total_dark_barrels ", total_dark_barrels)
     print("get_wholesale_purchase_plan: gold_amount ", gold_amount)
     
     if total_barrels <= 0:
@@ -122,21 +135,15 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     
     total_barrels_list = []
 
-    if total_red_barrels > 0:
-        total_barrels_list.append({ 
-                "sku": "SMALL_RED_BARREL",
-                "quantity": total_red_barrels,
-        })
-    if total_green_barrels > 0:
-        total_barrels_list.append({ 
-                "sku": "SMALL_GREEN_BARREL",
-                "quantity": total_green_barrels,
-        })
-    if total_blue_barrels > 0:
-        total_barrels_list.append({ 
-                "sku": "SMALL_BLUE_BARREL",
-                "quantity": total_blue_barrels,
-        })
+    barrel_colors = ["RED_BARREL", "GREEN_BARREL", "BLUE_BARREL"]
+    barrel_quantity = [total_red_barrels, total_green_barrels, total_blue_barrels, total_dark_barrels]
+
+    for i in range(len(barrel_colors)):
+        if barrel_quantity[i] > 0:
+            total_barrels_list.append({
+                "sku": barrel_colors[i],
+                "quantity": barrel_quantity[i],
+            })
 
     print("get_wholesale_purchase_plan: total_barrels_list ", total_barrels_list)
 
