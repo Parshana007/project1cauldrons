@@ -15,46 +15,21 @@ def get_catalog():
 
     # Can return a max of 20 items.
     # query database for num of red potions in DB
-    with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT num_red_potions, num_green_potions, num_blue_potions FROM global_inventory"))
-
-        potion_data = result.first()
-    
-    nums_red_potions = potion_data.num_red_potions
-    nums_green_potions = potion_data.num_green_potions
-    nums_blue_potions = potion_data.num_blue_potions
-
-    total_potions = nums_red_potions + nums_green_potions + nums_blue_potions
-
-    if total_potions == 0:
-        return []
-    
     potion_list = []
 
-    if nums_red_potions != 0:
-        potion_list.append({ 
-                "sku": "RED_POTION_0",
-                "name": "red potion",
-                "quantity": nums_red_potions,
-                "price": 50,
-                "potion_type": [100, 0, 0, 0],
-        })
-    if nums_green_potions != 0:
-        potion_list.append({ 
-                "sku": "GREEN_POTION_0",
-                "name": "green potion",
-                "quantity": nums_green_potions,
-                "price": 50,
-                "potion_type": [0, 100, 0, 0], 
-        })
-    if nums_blue_potions != 0:
-        potion_list.append({ 
-                "sku": "BLUE_POTION_0",
-                "name": "blue potion",
-                "quantity": nums_blue_potions,
-                "price": 50,
-                "potion_type": [0, 0, 100, 0],
-        })
+    with db.engine.begin() as connection:
+        # get all of the potions that are not 0
+        result = connection.execute(sqlalchemy.text("SELECT * FROM potion_catalog WHERE quantity != 0"))
 
+        potion_inventory_data = result.fetchall()
+
+    for potion in potion_inventory_data:
+        potion_list.append({
+            "sku": potion.sku,
+            "name": potion.sku,
+            "quantity": potion.quantity,
+            "price": potion.cost,
+            "potion_type": [potion.red_ml, potion.green_ml, potion.blue_ml, potion.dark_ml],
+        })
 
     return potion_list
