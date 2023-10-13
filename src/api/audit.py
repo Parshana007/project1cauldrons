@@ -19,12 +19,13 @@ def execute_sql(query):
 @router.get("/inventory")
 def get_inventory():
     """ """
-    result = execute_sql("SELECT num_red_potions, num_green_potions, num_blue_potions FROM global_inventory")
-    nums_potions = result.num_red_potions + result.num_green_potions + result.num_blue_potions
+    total_potions = 0
 
-    print("get_inventory: red_potions ", result.num_red_potions)
-    print("get_inventory: green_potions ", result.num_green_potions)
-    print("get_inventory: blue_potions ", result.num_blue_potions)
+    with db.engine.begin() as connection:
+        quantity_column = connection.execute(sqlalchemy.text("SELECT quantity FROM potion_catalog WHERE quantity != 0"))
+        for potion in quantity_column:
+            total_potions += potion.quantity
+
 
     result = execute_sql("SELECT num_red_ml, num_green_ml, num_blue_ml FROM global_inventory") 
     ml_per_barrel = result.num_red_ml + result.num_green_ml + result.num_blue_ml
@@ -38,9 +39,9 @@ def get_inventory():
 
     print("get_inventory: gold_total ", gold_total)
     print("get_inventory: ml_per_barrel ", ml_per_barrel)
-    print("get_inventory: nums_potions ", nums_potions)
+    print("get_inventory: nums_potions ", total_potions)
     
-    return {"number_of_potions": nums_potions, "ml_in_barrels": ml_per_barrel, "gold": gold_total}
+    return {"number_of_potions": total_potions, "ml_in_barrels": ml_per_barrel, "gold": gold_total}
 
 class Result(BaseModel):
     gold_match: bool
