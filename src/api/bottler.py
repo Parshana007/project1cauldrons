@@ -28,14 +28,24 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
                 sqlalchemy.text(
                 """
                 UPDATE global_inventory SET 
-                num_red_ml = num_red_ml - :red_ml 
-                num_green_ml = num_green_ml - :green_ml
-                num_blue_ml = num_blue_ml - :blue_ml
+                num_red_ml = num_red_ml - :red_ml,
+                num_green_ml = num_green_ml - :green_ml,
+                num_blue_ml = num_blue_ml - :blue_ml,
                 num_dark_ml = num_dark_ml - :dark_ml
                 """
                 ),
             [{"red_ml": potion.potion_type[0], "green_ml": potion.potion_type[1], "blue_ml": potion.potion_type[2], "dark_ml": potion.potion_type[3]}])
 
+            connection.execute(
+                sqlalchemy.text(
+                """
+                UPDATE potion_catalog SET
+                quantity = quantity + :quantity
+                WHERE red_ml = :red_ml AND green_ml = :green_ml AND blue_ml = :blue_ml AND dark_ml = :dark_ml
+                """
+                ),
+            [{"quantity": potion.quantity, "red_ml": potion.potion_type[0], "green_ml": potion.potion_type[1], "blue_ml": potion.potion_type[2], "dark_ml": potion.potion_type[3]}])
+            
     return "OK"
 
 # Gets called 4 times a day
@@ -51,7 +61,7 @@ def get_bottle_plan():
 
     with db.engine.begin() as connection:
         ml_data_result = connection.execute(sqlalchemy.text("SELECT num_red_ml, num_green_ml, num_blue_ml, num_dark_ml FROM global_inventory"))
-        quantity_potions_result = connection.execute(sqlalchemy.text("SELECT quantity FROM potion_catalog WHERE quantity == 0"))
+        quantity_potions_result = connection.execute(sqlalchemy.text("SELECT red_ml, green_ml, blue_ml, dark_ml, quantity FROM potion_catalog WHERE quantity = 0"))
 
         num_ml_data = ml_data_result.first()
         quantity_potions_result = quantity_potions_result.fetchall()
@@ -63,7 +73,10 @@ def get_bottle_plan():
 
     potions_list = []
 
+    print("get_bottle_plan: quantity_potions_result ", quantity_potions_result)
+
     for potion in quantity_potions_result:
+        print("get_bottle_plan: potion ",potion)
         if potion.red_ml <= num_red_ml and potion.green_ml <= num_green_ml and potion.blue_ml <= num_blue_ml and potion.dark_ml <= num_dark_ml:
 
             potions_list.append({
@@ -76,10 +89,10 @@ def get_bottle_plan():
             num_blue_ml -= potion.blue_ml
             num_dark_ml -= potion.dark_ml
 
-    print("get_bottle_plan: num_red_ml ", num_ml_data.num_red_ml)
-    print("get_bottle_plan: num_green_ml ", num_ml_data.num_green_ml)
-    print("get_bottle_plan: num_blue_ml ", num_ml_data.num_blue_ml)
-    print("get_bottle_plan: num_dark_ml ", num_ml_data.num_dark_ml)
+    print("get_bottle_plan: num_red_ml ", num_red_ml)
+    print("get_bottle_plan: num_green_ml ", num_green_ml)
+    print("get_bottle_plan: num_blue_ml ", num_blue_ml)
+    print("get_bottle_plan: num_dark_ml ", num_dark_ml)
     print("get_bottle_plan: potions_list ", potions_list)
 
     return potions_list
