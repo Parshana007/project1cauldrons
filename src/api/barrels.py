@@ -108,6 +108,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     total_blue_barrels = 0
     total_dark_barrels = 0
     quantity_to_purchase = 0
+    total_barrels_list = []
 
     for barrel in wholesale_catalog:
         quantity_to_purchase = gold_amount // barrel.price
@@ -116,13 +117,29 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
         if quantity_to_purchase > 0:
             if barrel.potion_type == [1, 0, 0, 0] and total_red_barrels < 2:
-                total_red_barrels += 1  
+                total_red_barrels += 1 
+                total_barrels_list.append({
+                    "sku": barrel.sku,
+                    "quantity": 1,
+                })
             elif barrel.potion_type == [0, 1, 0, 0] and total_green_barrels < 2:
                 total_green_barrels += 1 
+                total_barrels_list.append({
+                    "sku": barrel.sku,
+                    "quantity": 1,
+                })
             elif barrel.potion_type == [0, 0, 1, 0] and total_blue_barrels < 2:
                 total_blue_barrels += 1 
+                total_barrels_list.append({
+                    "sku": barrel.sku,
+                    "quantity": 1,
+                })
             elif barrel.potion_type == [0, 0, 0, 1] and total_dark_barrels < 2:
                 total_dark_barrels += 1
+                total_barrels_list.append({
+                    "sku": barrel.sku,
+                    "quantity": 1,
+                })
             else:
                 raise Exception("Invalid potion type")
             gold_amount -= barrel.price 
@@ -138,18 +155,6 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     
     if total_barrels <= 0:
         return []
-    
-    total_barrels_list = []
-
-    barrel_colors = ["RED_BARREL", "GREEN_BARREL", "BLUE_BARREL"]
-    barrel_quantity = [total_red_barrels, total_green_barrels, total_blue_barrels, total_dark_barrels]
-
-    for i in range(len(barrel_colors)):
-        if barrel_quantity[i] > 0:
-            total_barrels_list.append({
-                "sku": barrel_colors[i],
-                "quantity": barrel_quantity[i],
-            })
 
     print("get_wholesale_purchase_plan: total_barrels_list ", total_barrels_list)
 
