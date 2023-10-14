@@ -28,11 +28,7 @@ class NewCart(BaseModel):
 @router.post("/")
 def create_cart(new_cart: NewCart):
     """ """
-    # global cart_id_counter
-    # cart_id_counter += 1
-    # my_dict[cart_id_counter] = Customer(new_cart.customer, [0, 0, 0, 0], 0)
     with db.engine.begin() as connection:
-        # get all of the potions that are not 0
         result = connection.execute(
             sqlalchemy.text(
                 """
@@ -47,10 +43,24 @@ def create_cart(new_cart: NewCart):
 @router.get("/{cart_id}")
 def get_cart(cart_id: int): 
     """ """
-    if cart_id in my_dict:
-        return my_dict[cart_id] # return whole customer object
-    else:
-        return {} #cart_id doesn't exist
+    with db.engine.begin() as connection:
+        result = connection.execute(
+            sqlalchemy.text(
+            """
+            SELECT * 
+            FROM carts
+            WHERE cart_id = :cart_id
+            """
+    ), [{"cart_id": cart_id}])
+        
+        
+    if result is not None:
+        return {
+            "cart_id": result.cart_id,
+            "customer_name": result.customer_name,
+            "can_buy": result.can_buy
+        }
+    return {}
 
 
 class CartItem(BaseModel):
@@ -60,21 +70,14 @@ class CartItem(BaseModel):
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem): 
     """ """
-    color_key = {
-        "RED": 0,
-        "GREEN": 1,
-        "BLUE": 2
-    }
-    # my_dict[cart_id].potions_bought[0] = cart_item.quantity
-    if "RED" in item_sku: 
-        key = "RED"
-    elif "GREEN" in item_sku:
-        key = "GREEN"
-    elif "BLUE" in item_sku:
-        key = "BLUE"
-
-    my_dict[cart_id].gold_paid += cart_item.quantity * 50 # each potion = 50 gold
-    my_dict[cart_id].potions_bought[color_key[key]] += cart_item.quantity  
+    with db.engine.begin() as connection:
+        connection.execute(
+            sqlalchemy.text(
+                """
+                INSERT INTO cart_items (cart_id, sku, count_to_buy)
+                VALUES (:cart_id, :sku, :count_to_buy)
+                """
+        ), [{"cart_id" : cart_id, "sku": item_sku, "count_to_buy": cart_item.quantity}])
 
     return "OK"
 
@@ -85,33 +88,55 @@ class CartCheckout(BaseModel):
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout): 
     """ """
-    total_red_potions = my_dict[cart_id].potions_bought[0]
-    total_green_potions = my_dict[cart_id].potions_bought[1]
-    total_blue_potions = my_dict[cart_id].potions_bought[2]
-
-    total_potions_bought = total_red_potions + total_green_potions + total_blue_potions
-
-    with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT num_red_potions, num_green_potions, num_blue_potions FROM global_inventory"))
-        potions_row = result.first()
-
-    nums_red_potions = potions_row.num_red_potions
-    nums_green_potions = potions_row.num_green_potions
-    nums_blue_potions = potions_row.num_blue_potions
-
-    if total_red_potions > nums_red_potions or total_green_potions > nums_green_potions or total_blue_potions > nums_blue_potions: #? Do I need to check if customer can buy?
-        my_dict[cart_id].potions_bought[0] = 0
-        my_dict[cart_id].potions_bought[1] = 0
-        my_dict[cart_id].potions_bought[2] = 0
-        my_dict[cart_id].gold_paid = 0
-        raise HTTPException(status_code=409, detail="Not enough potions in inventory")
+    # find the potion that matches the cart_id
+    # grab all info of the specific item in cart_items all instance where cart_id is the checkout id
+    # update the potion_catalog to correctly subtract the quantity of the potion
+    # update global_inventory for the gold 
+    total_potions_bought = 0
+    total_gold_paid = 0
     
-    total_gold_paid = my_dict[cart_id].gold_paid
-
     with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_red_potions = num_red_potions - {total_red_potions}"))
-        connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_green_potions = num_green_potions - {total_green_potions}"))
-        connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET num_blue_potions = num_blue_potions - {total_blue_potions}"))
-        connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold + {total_gold_paid}"))
+        cart_info = connection.execute(
+            sqlalchemy.text(
+                """
+                SELECT cart_id, sku, count_to_buy
+                FROM cart_items
+                WHERE cart_id = :cart_id
+                """
+        ), [{"cart_id": cart_id}]).fetchall()
+
+    print("checkout: cart_info ", cart_info)
+
+    for cart_to_buy in cart_info:
+        print("checkout: cart_to_buy ", cart_to_buy)
+        with db.engine.begin() as connection:
+            potion_info = connection.execute(
+                sqlalchemy.text(
+                    """
+                    SELECT quantity, cost, sku 
+                    FROM potion_catalog
+                    WHERE potion_catalog.sku = :sku
+                    """
+            ), [{"sku": cart_to_buy.sku}]).first()
+            connection.execute(
+                sqlalchemy.text(
+                    """
+                    UPDATE potion_catalog
+                    SET quantity = quantity - :count_to_buy
+                    WHERE potion_catalog.sku = :sku
+                    """
+            ), [{"count_to_buy": cart_to_buy.count_to_buy, "sku": cart_to_buy.sku}])
+            connection.execute(
+                sqlalchemy.text(
+                    """
+                    UPDATE global_inventory
+                    SET gold = gold + :customer_payed
+                    """
+            ), [{"customer_payed": cart_to_buy.count_to_buy * potion_info.cost}])
+
+        total_potions_bought += cart_to_buy.count_to_buy
+        total_gold_paid += cart_to_buy.count_to_buy * potion_info.cost
+        print("checkout: total_potions_bought ", total_potions_bought)
+        print("checkout: total_gold_paid ", total_gold_paid)
 
     return {"total_potions_bought": total_potions_bought, "total_gold_paid": total_gold_paid}
