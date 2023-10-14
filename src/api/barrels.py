@@ -116,25 +116,25 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         print("get_wholesale_purchase_plan: quantity_to_purchase ", quantity_to_purchase)
 
         if quantity_to_purchase > 0:
-            if barrel.potion_type == [1, 0, 0, 0] and total_red_barrels < 2 and num_red_ml < 100:
+            if barrel.potion_type == [1, 0, 0, 0] and total_red_barrels < 1 and num_red_ml < 100:
                 total_red_barrels += 1 
                 total_barrels_list.append({
                     "sku": barrel.sku,
                     "quantity": 1,
                 })
-            elif barrel.potion_type == [0, 1, 0, 0] and total_green_barrels < 2 and num_green_ml < 100:
+            elif barrel.potion_type == [0, 1, 0, 0] and total_green_barrels < 1 and num_green_ml < 100:
                 total_green_barrels += 1 
                 total_barrels_list.append({
                     "sku": barrel.sku,
                     "quantity": 1,
                 })
-            elif barrel.potion_type == [0, 0, 1, 0] and total_blue_barrels < 2 and num_blue_ml < 100:
+            elif barrel.potion_type == [0, 0, 1, 0] and total_blue_barrels < 1 and num_blue_ml < 100:
                 total_blue_barrels += 1 
                 total_barrels_list.append({
                     "sku": barrel.sku,
                     "quantity": 1,
                 })
-            elif barrel.potion_type == [0, 0, 0, 1] and total_dark_barrels < 2 and num_dark_ml < 100:
+            elif barrel.potion_type == [0, 0, 0, 1] and total_dark_barrels < 1 and num_dark_ml < 100:
                 total_dark_barrels += 1
                 total_barrels_list.append({
                     "sku": barrel.sku,
