@@ -61,6 +61,7 @@ def get_bottle_plan():
 
     with db.engine.begin() as connection:
         ml_data_result = connection.execute(sqlalchemy.text("SELECT num_red_ml, num_green_ml, num_blue_ml, num_dark_ml FROM global_inventory"))
+        # TODO change back to WHERE quantity = 0
         quantity_potions_result = connection.execute(sqlalchemy.text("SELECT red_ml, green_ml, blue_ml, dark_ml, quantity, sku FROM potion_catalog"))
 
         num_ml_data = ml_data_result.first()
@@ -79,13 +80,15 @@ def get_bottle_plan():
         print("get_bottle_plan: potion ",potion)
         if (potion.sku == "RED_POTION" and num_red_ml > 100) and potion.sku != "GREEN_POTION" and potion.sku != "BLUE_POTION" and potion.sku != "DARK_POTION":
             if potion.red_ml <= num_red_ml and potion.green_ml <= num_green_ml and potion.blue_ml <= num_blue_ml and potion.dark_ml <= num_dark_ml:
-
+                quantity = 1
+                if potion.sku == "RED_POTION":
+                    quantity = num_red_ml // potion.red_ml - 1 # to give me 3
                 potions_list.append({
                     "potion_type": [potion.red_ml, potion.green_ml, potion.blue_ml, potion.dark_ml],
-                    "quantity": 1
+                    "quantity": quantity
                 })
 
-                num_red_ml -= potion.red_ml
+                num_red_ml -= potion.red_ml * quantity
                 num_green_ml -= potion.green_ml
                 num_blue_ml -= potion.blue_ml
                 num_dark_ml -= potion.dark_ml
