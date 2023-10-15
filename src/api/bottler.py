@@ -61,7 +61,7 @@ def get_bottle_plan():
 
     with db.engine.begin() as connection:
         ml_data_result = connection.execute(sqlalchemy.text("SELECT num_red_ml, num_green_ml, num_blue_ml, num_dark_ml FROM global_inventory"))
-        quantity_potions_result = connection.execute(sqlalchemy.text("SELECT red_ml, green_ml, blue_ml, dark_ml, quantity FROM potion_catalog WHERE quantity = 0"))
+        quantity_potions_result = connection.execute(sqlalchemy.text("SELECT red_ml, green_ml, blue_ml, dark_ml, quantity, sku FROM potion_catalog"))
 
         num_ml_data = ml_data_result.first()
         quantity_potions_result = quantity_potions_result.fetchall()
@@ -77,7 +77,7 @@ def get_bottle_plan():
 
     for potion in quantity_potions_result:
         print("get_bottle_plan: potion ",potion)
-        if potion.sku != "RED_POTION" and potion.sku != "GREEN_POTION" and potion.sku != "BLUE_POTION" and potion.sku != "DARK_POTION":
+        if (potion.sku == "RED_POTION" and num_red_ml > 100) and potion.sku != "GREEN_POTION" and potion.sku != "BLUE_POTION" and potion.sku != "DARK_POTION":
             if potion.red_ml <= num_red_ml and potion.green_ml <= num_green_ml and potion.blue_ml <= num_blue_ml and potion.dark_ml <= num_dark_ml:
 
                 potions_list.append({
