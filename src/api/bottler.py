@@ -77,17 +77,18 @@ def get_bottle_plan():
 
     for potion in quantity_potions_result:
         print("get_bottle_plan: potion ",potion)
-        if potion.red_ml <= num_red_ml and potion.green_ml <= num_green_ml and potion.blue_ml <= num_blue_ml and potion.dark_ml <= num_dark_ml:
+        if potion.sku != "RED_POTION" and potion.sku != "GREEN_POTION" and potion.sku != "BLUE_POTION" and potion.sku != "DARK_POTION":
+            if potion.red_ml <= num_red_ml and potion.green_ml <= num_green_ml and potion.blue_ml <= num_blue_ml and potion.dark_ml <= num_dark_ml:
 
-            potions_list.append({
-                "potion_type": [potion.red_ml, potion.green_ml, potion.blue_ml, potion.dark_ml],
-                "quantity": 1
-            })
+                potions_list.append({
+                    "potion_type": [potion.red_ml, potion.green_ml, potion.blue_ml, potion.dark_ml],
+                    "quantity": 1
+                })
 
-            num_red_ml -= potion.red_ml
-            num_green_ml -= potion.green_ml
-            num_blue_ml -= potion.blue_ml
-            num_dark_ml -= potion.dark_ml
+                num_red_ml -= potion.red_ml
+                num_green_ml -= potion.green_ml
+                num_blue_ml -= potion.blue_ml
+                num_dark_ml -= potion.dark_ml
 
     print("get_bottle_plan: num_red_ml ", num_red_ml)
     print("get_bottle_plan: num_green_ml ", num_green_ml)
