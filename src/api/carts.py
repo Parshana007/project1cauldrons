@@ -11,16 +11,6 @@ router = APIRouter(
     dependencies=[Depends(auth.get_api_key)],
 )
 
-# class Customer:
-#     def __init__(self, name, potions_bought, gold_paid):
-#         self.name = name
-#         self.potions_bought = potions_bought
-#         self.gold_paid = gold_paid
-
-# cart_id_counter = 0
-
-# my_dict = {} 
-
 class NewCart(BaseModel):
     customer: str
  
@@ -51,14 +41,13 @@ def get_cart(cart_id: int):
             FROM carts
             WHERE cart_id = :cart_id
             """
-    ), [{"cart_id": cart_id}])
+    ), [{"cart_id": cart_id}]).first()
         
         
     if result is not None:
         return {
             "cart_id": result.cart_id,
             "customer_name": result.customer_name,
-            "can_buy": result.can_buy
         }
     return {}
 
@@ -78,6 +67,10 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
                 VALUES (:cart_id, :sku, :count_to_buy)
                 """
         ), [{"cart_id" : cart_id, "sku": item_sku, "count_to_buy": cart_item.quantity}])
+
+    print("set_item_quantity: cart_id ", cart_id)
+    print("set_item_quantity: item_sku ", item_sku)
+    print("set_item_quantity: cart_item.quantity ", cart_item.quantity)
 
     return "OK"
 
@@ -111,7 +104,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         print("checkout: cart_to_buy ", cart_to_buy)
         with db.engine.begin() as connection:
             potion_info = connection.execute(
-                sqlalchemy.text(
+                sqlalchemy.text( #TODO try to optimize this query into one
                     """
                     SELECT quantity, cost, sku 
                     FROM potion_catalog
