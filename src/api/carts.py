@@ -33,9 +33,9 @@ def create_cart(new_cart: NewCart):
             sqlalchemy.text(
                 """
                 INSERT INTO carts (customer_name, can_buy)
-                VALUES (:customer_name, :truthiness)
+                VALUES (:customer_name)
                 RETURNING cart_id"""
-        ), [{"customer_name" : new_cart.customer, "truthiness": False}]).scalar()
+        ), [{"customer_name" : new_cart.customer}]).scalar()
 
     print("create_cart: result ", result)
     return {"cart_id" : result} 
