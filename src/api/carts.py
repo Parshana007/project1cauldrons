@@ -32,7 +32,7 @@ def create_cart(new_cart: NewCart):
         result = connection.execute(
             sqlalchemy.text(
                 """
-                INSERT INTO carts (customer_name, can_buy)
+                INSERT INTO carts (customer_name)
                 VALUES (:customer_name)
                 RETURNING cart_id"""
         ), [{"customer_name" : new_cart.customer}]).scalar()
