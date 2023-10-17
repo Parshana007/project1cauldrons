@@ -32,22 +32,39 @@ def create_cart(new_cart: NewCart):
 
 @router.get("/{cart_id}")
 def get_cart(cart_id: int): 
-    """ """
+    """ """ #TODO make a join to get the quantity total of a cart
+    # with db.engine.begin() as connection:
+    #     result = connection.execute(
+    #         sqlalchemy.text(
+    #         """
+    #         SELECT * 
+    #         FROM carts 
+    #         WHERE cart_id = :cart_id
+    #         """
+    # ), [{"cart_id": cart_id}]).first() #Join on cart_items to get the total quantity of the cart
+
+    quantity_to_buy = 0
+    # SUM(cart_items.count_to_buy) AS quantity_to_buy
     with db.engine.begin() as connection:
         result = connection.execute(
             sqlalchemy.text(
             """
-            SELECT * 
-            FROM carts
-            WHERE cart_id = :cart_id
+            SELECT carts.cart_id, customer_name, SUM(cart_items.count_to_buy) AS quantity_to_buy
+            FROM carts 
+            JOIN cart_items ON carts.cart_id = cart_items.cart_id
+            WHERE carts.cart_id = :cart_id
+            GROUP BY carts.cart_id, carts.customer_name
             """
     ), [{"cart_id": cart_id}]).first()
+        
+    print(result) # gives back (14, "Sammy", 3)
         
         
     if result is not None:
         return {
-            "cart_id": result.cart_id,
+            "cart_id": cart_id,
             "customer_name": result.customer_name,
+            "quantity_to_buy": result.quantity_to_buy
         }
     return {}
 
@@ -104,7 +121,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         print("checkout: cart_to_buy ", cart_to_buy)
         with db.engine.begin() as connection:
             potion_info = connection.execute(
-                sqlalchemy.text( #TODO try to optimize this query into one
+                sqlalchemy.text( #TODO try to optimize this query into one [make join]
                     """
                     SELECT quantity, cost, sku 
                     FROM potion_catalog

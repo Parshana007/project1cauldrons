@@ -115,7 +115,8 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
         print("get_wholesale_purchase_plan: quantity_to_purchase ", quantity_to_purchase)
 
-        if quantity_to_purchase > 0 and "MINI" in barrel.sku and "RED" not in barrel.sku:
+        #if quantity_to_purchase > 0 and "MINI" in barrel.sku and "RED" not in barrel.sku:
+        if quantity_to_purchase > 0:
             if barrel.potion_type == [1, 0, 0, 0] and total_red_barrels < 1 and num_red_ml < 100:
                 total_red_barrels += 1 
                 total_barrels_list.append({
@@ -140,7 +141,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     "sku": barrel.sku,
                     "quantity": 1,
                 })
-            else:
+            elif "BARREL" not in barrel.sku:
                 raise Exception("Invalid potion type")
             gold_amount -= barrel.price 
 
