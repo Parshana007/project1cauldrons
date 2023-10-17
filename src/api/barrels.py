@@ -111,6 +111,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     total_barrels_list = []
 
     for barrel in wholesale_catalog:
+        print("barrel ", barrel)
         quantity_to_purchase = gold_amount // barrel.price
 
         print("get_wholesale_purchase_plan: quantity_to_purchase ", quantity_to_purchase)
@@ -123,27 +124,36 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     "sku": barrel.sku,
                     "quantity": 1,
                 })
+                gold_amount -= barrel.price 
+                print("red barrel added")
             elif barrel.potion_type == [0, 1, 0, 0] and total_green_barrels < 1 and num_green_ml < 100:
                 total_green_barrels += 1 
                 total_barrels_list.append({
                     "sku": barrel.sku,
                     "quantity": 1,
                 })
+                gold_amount -= barrel.price 
+                print("green barrel added")
             elif barrel.potion_type == [0, 0, 1, 0] and total_blue_barrels < 1 and num_blue_ml < 100:
                 total_blue_barrels += 1 
                 total_barrels_list.append({
                     "sku": barrel.sku,
                     "quantity": 1,
                 })
-            elif barrel.potion_type == [0, 0, 0, 1] and total_dark_barrels < 1 and num_dark_ml < 100:
+                gold_amount -= barrel.price 
+                print("blue barrel added")
+            elif barrel.potion_type == [0, 0, 0, 1] and total_green_barrels < 1 and num_dark_ml < 100:
                 total_dark_barrels += 1
                 total_barrels_list.append({
                     "sku": barrel.sku,
                     "quantity": 1,
                 })
+                gold_amount -= barrel.price 
+                print("dark barrel added")
             elif "BARREL" not in barrel.sku:
                 raise Exception("Invalid potion type")
-            gold_amount -= barrel.price 
+            print("gold_amount ", gold_amount)
+            print("total_barrels_list ", total_barrels_list)
 
     total_barrels = total_red_barrels + total_green_barrels + total_blue_barrels + total_dark_barrels
 
