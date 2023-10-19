@@ -21,9 +21,11 @@ def get_catalog():
 
         #join the two tables to get the quantity 
         result = connection.execute(sqlalchemy.text(
-            """SELECT quantity_delta 
-            FROM potion_ledger_ 
-            WHERE quantity != 0
+            """
+            SELECT sku, red_ml, green_ml, blue_ml, dark_ml, cost, SUM(potion_ledger_entries.quantity_delta) AS quantity 
+            FROM potion_ledger_entries
+            INNER JOIN potion_catalog ON potion_ledger_entries.potion_id = potion_catalog.potion_id
+            GROUP BY potion_catalog.potion_id
             """))
 
         potion_inventory_data = result.fetchall()
@@ -32,7 +34,7 @@ def get_catalog():
         potion_list.append({
             "sku": potion.sku,
             "name": potion.sku,
-            "quantity": potion.quantity, #doesn't exist anymore
+            "quantity": potion.quantity, 
             "price": potion.cost,
             "potion_type": [potion.red_ml, potion.green_ml, potion.blue_ml, potion.dark_ml],
         })
