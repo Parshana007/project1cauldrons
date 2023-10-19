@@ -19,7 +19,9 @@ def get_catalog():
     with db.engine.begin() as connection:
         # get all of the potions that are not 0
 
-        #join the two tables to get the quantity 
+        # SUM gives me sum of each unique instance of a potion_id as quantity without sum I would get repeated values in result table
+        # must use group by to reflect the unique identifiers for the SUM aggregate function
+        # join is necessary to connect a sku from one table with quantity from another table
         result = connection.execute(sqlalchemy.text(
             """
             SELECT sku, red_ml, green_ml, blue_ml, dark_ml, cost, SUM(potion_ledger_entries.quantity_delta) AS quantity 
