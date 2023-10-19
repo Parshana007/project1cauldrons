@@ -60,11 +60,22 @@ def get_bottle_plan():
     # Expressed in integers from 1 to 100 that must sum up to 100.
 
     with db.engine.begin() as connection:
-        ml_data_result = connection.execute(sqlalchemy.text("SELECT num_red_ml, num_green_ml, num_blue_ml, num_dark_ml FROM global_inventory"))
-        quantity_potions_result = connection.execute(sqlalchemy.text("SELECT red_ml, green_ml, blue_ml, dark_ml, quantity, sku FROM potion_catalog WHERE quantity = 0"))
-
-        num_ml_data = ml_data_result.first()
-        quantity_potions_result = quantity_potions_result.fetchall()
+        num_ml_data = connection.execute(sqlalchemy.text(
+            """
+            SELECT SUM(red_ml_delta) AS num_red_ml, 
+                    SUM(green_ml_delta) AS num_green_ml, 
+                    SUM(blue_ml_delta) AS num_blue_ml, 
+                    SUM(dark_ml_delta) AS num_dark_ml
+            FROM barrel_ledger_entries
+            """)).first()
+        quantity_potions_result = connection.execute(sqlalchemy.text(
+            """
+            SELECT sku, red_ml, green_ml, blue_ml, dark_ml, cost, SUM(potion_ledger_entries.quantity_delta) AS quantity 
+            FROM potion_ledger_entries
+            RIGHT JOIN potion_catalog ON potion_ledger_entries.potion_id = potion_catalog.potion_id
+            GROUP BY potion_catalog.potion_id
+            HAVING SUM(potion_ledger_entries.quantity_delta) is NULL
+            """)).fetchall()
 
     num_red_ml = num_ml_data.num_red_ml
     num_green_ml = num_ml_data.num_green_ml
