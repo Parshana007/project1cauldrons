@@ -57,19 +57,19 @@ def get_bottle_plan():
     with db.engine.begin() as connection:
         num_ml_data = connection.execute(sqlalchemy.text(
             """
-            SELECT SUM(red_ml_delta) AS num_red_ml, 
-                    SUM(green_ml_delta) AS num_green_ml, 
-                    SUM(blue_ml_delta) AS num_blue_ml, 
-                    SUM(dark_ml_delta) AS num_dark_ml
+            SELECT COALESCE(SUM(red_ml_delta),0) AS num_red_ml, 
+                    COALESCE(SUM(green_ml_delta),0) AS num_green_ml, 
+                    COALESCE(SUM(blue_ml_delta),0) AS num_blue_ml, 
+                    COALESCE(SUM(dark_ml_delta),0) AS num_dark_ml
             FROM barrel_ledger_entries
             """)).first()
         quantity_potions_result = connection.execute(sqlalchemy.text(
             """
-            SELECT sku, red_ml, green_ml, blue_ml, dark_ml, cost, SUM(potion_ledger_entries.quantity_delta) AS quantity 
+            SELECT sku, red_ml, green_ml, blue_ml, dark_ml, cost, COALESCE(SUM(potion_ledger_entries.quantity_delta), 0) AS quantity 
             FROM potion_ledger_entries
             RIGHT JOIN potion_catalog ON potion_ledger_entries.potion_id = potion_catalog.potion_id
             GROUP BY potion_catalog.potion_id
-            HAVING SUM(potion_ledger_entries.quantity_delta) is NULL
+            HAVING SUM(potion_ledger_entries.quantity_delta) is NULL OR SUM(potion_ledger_entries.quantity_delta) = 0
             """)).fetchall()
 
     num_red_ml = num_ml_data.num_red_ml

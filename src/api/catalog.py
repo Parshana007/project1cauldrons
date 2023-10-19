@@ -24,7 +24,7 @@ def get_catalog():
         # join is necessary to connect a sku from one table with quantity from another table
         result = connection.execute(sqlalchemy.text(
             """
-            SELECT sku, red_ml, green_ml, blue_ml, dark_ml, cost, SUM(potion_ledger_entries.quantity_delta) AS quantity 
+            SELECT sku, red_ml, green_ml, blue_ml, dark_ml, cost, COALESCE(SUM(potion_ledger_entries.quantity_delta),0) AS quantity 
             FROM potion_ledger_entries
             INNER JOIN potion_catalog ON potion_ledger_entries.potion_id = potion_catalog.potion_id
             GROUP BY potion_catalog.potion_id

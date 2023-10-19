@@ -21,10 +21,10 @@ def get_inventory():
     """ """
 
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT SUM(gold_delta) total_gold FROM gold_ledger_entries")).first()
+        result = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(gold_delta),0) total_gold FROM gold_ledger_entries")).first()
         gold_total = result.total_gold
         result = connection.execute(sqlalchemy.text(
-            """SELECT COALESCE(SUM(red_ml_delta), 0) total_red_ml, COALESCE(SUM(blue_ml_delta)) total_blue_ml, COALESCE(SUM(green_ml_delta)) total_green_ml, COALESCE(SUM(dark_ml_delta), 0) total_dark_ml
+            """SELECT COALESCE(SUM(red_ml_delta), 0) total_red_ml, COALESCE(SUM(blue_ml_delta), 0) total_blue_ml, COALESCE(SUM(green_ml_delta), 0) total_green_ml, COALESCE(SUM(dark_ml_delta), 0) total_dark_ml
             FROM barrel_ledger_entries
             """)
         ).first()

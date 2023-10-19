@@ -40,7 +40,7 @@ def get_cart(cart_id: int):
         result = connection.execute(
             sqlalchemy.text(
             """
-            SELECT carts.cart_id, customer_name, SUM(cart_items.count_to_buy) AS quantity_to_buy
+            SELECT carts.cart_id, customer_name, COALESCE(SUM(cart_items.count_to_buy),0) AS quantity_to_buy
             FROM carts 
             JOIN cart_items ON carts.cart_id = cart_items.cart_id
             WHERE carts.cart_id = :cart_id

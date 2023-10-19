@@ -78,15 +78,15 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     with db.engine.begin() as connection:
         result_ml = connection.execute(sqlalchemy.text(
             """
-            SELECT SUM(red_ml_delta) AS num_red_ml, 
-                    SUM(green_ml_delta) AS num_green_ml, 
-                    SUM(blue_ml_delta) AS num_blue_ml, 
-                    SUM(dark_ml_delta) AS num_dark_ml
+            SELECT COALESCE(SUM(red_ml_delta),0) AS num_red_ml, 
+                    COALESCE(SUM(green_ml_delta),0) AS num_green_ml, 
+                    COALESCE(SUM(blue_ml_delta),0) AS num_blue_ml, 
+                    COALESCE(SUM(dark_ml_delta),0) AS num_dark_ml
             FROM barrel_ledger_entries"""
             )).first()
         result_gold = connection.execute(sqlalchemy.text(
             """
-            SELECT SUM(gold_delta) AS gold
+            SELECT COALESCE(SUM(gold_delta),0) AS gold
             FROM gold_ledger_entries
             """
         )).first()
