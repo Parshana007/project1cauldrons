@@ -32,16 +32,7 @@ def create_cart(new_cart: NewCart):
 
 @router.get("/{cart_id}")
 def get_cart(cart_id: int): 
-    """ """ #TODO make a join to get the quantity total of a cart
-    # with db.engine.begin() as connection:
-    #     result = connection.execute(
-    #         sqlalchemy.text(
-    #         """
-    #         SELECT * 
-    #         FROM carts 
-    #         WHERE cart_id = :cart_id
-    #         """
-    # ), [{"cart_id": cart_id}]).first() #Join on cart_items to get the total quantity of the cart
+    """ """ 
 
     quantity_to_buy = 0
     # SUM(cart_items.count_to_buy) AS quantity_to_buy
@@ -121,9 +112,9 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         print("checkout: cart_to_buy ", cart_to_buy)
         with db.engine.begin() as connection:
             potion_info = connection.execute(
-                sqlalchemy.text( #TODO try to optimize this query into one [make join]
+                sqlalchemy.text( 
                     """
-                    SELECT quantity, cost, sku 
+                    SELECT potion_id, cost, sku 
                     FROM potion_catalog
                     WHERE potion_catalog.sku = :sku
                     """
@@ -131,18 +122,18 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             connection.execute(
                 sqlalchemy.text(
                     """
-                    UPDATE potion_catalog
-                    SET quantity = quantity - :count_to_buy
-                    WHERE potion_catalog.sku = :sku
+                    INSERT INTO potion_ledger_entries (potion_id, quantity_delta)
+                    VALUES (:potion_id, :quantity)
                     """
-            ), [{"count_to_buy": cart_to_buy.count_to_buy, "sku": cart_to_buy.sku}])
+            ), [{"potion_id": potion_info.potion_id, "quantity": -cart_to_buy.count_to_buy}])
+
             connection.execute(
                 sqlalchemy.text(
                     """
-                    UPDATE global_inventory
-                    SET gold = gold + :customer_payed
+                    INSERT INTO gold_ledger_entries (gold_delta)
+                    VALUES (:gold_change)
                     """
-            ), [{"customer_payed": cart_to_buy.count_to_buy * potion_info.cost}])
+            ), [{"gold_change": cart_to_buy.count_to_buy * potion_info.cost}])
 
         total_potions_bought += cart_to_buy.count_to_buy
         total_gold_paid += cart_to_buy.count_to_buy * potion_info.cost
