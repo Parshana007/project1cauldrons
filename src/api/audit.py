@@ -19,28 +19,18 @@ def execute_sql(query):
 @router.get("/inventory")
 def get_inventory():
     """ """
-    total_potions = 0
 
     with db.engine.begin() as connection:
-        quantity_column = connection.execute(sqlalchemy.text("SELECT quantity FROM potion_catalog WHERE quantity != 0"))
-        for potion in quantity_column:
-            total_potions += potion.quantity
-
-
-    result = execute_sql("SELECT num_red_ml, num_green_ml, num_blue_ml, num_dark_ml FROM global_inventory") 
-    ml_per_barrel = result.num_red_ml + result.num_green_ml + result.num_blue_ml + result.num_dark_ml
-
-    print("get_inventory: red_ml ", result.num_red_ml)
-    print("get_inventory: green_ml ", result.num_green_ml)
-    print("get_inventory: blue_ml ", result.num_blue_ml)
-    print("get_inventory: dark_ml ", result.num_dark_ml)
-
-    result = execute_sql("SELECT gold FROM global_inventory")
-    gold_total = result.gold
-
-    print("get_inventory: gold_total ", gold_total)
-    print("get_inventory: ml_per_barrel ", ml_per_barrel)
-    print("get_inventory: nums_potions ", total_potions)
+        result = connection.execute(sqlalchemy.text("SELECT SUM(gold_delta) total_gold FROM gold_ledger_entries")).first()
+        gold_total = result.total_gold
+        result = connection.execute(sqlalchemy.text(
+            """SELECT COALESCE(SUM(red_ml_delta), 0) total_red_ml, COALESCE(SUM(blue_ml_delta)) total_blue_ml, COALESCE(SUM(green_ml_delta)) total_green_ml, COALESCE(SUM(dark_ml_delta), 0) total_dark_ml
+            FROM barrel_ledger_entries
+            """)
+        ).first()
+        ml_per_barrel = result.total_red_ml + result.total_green_ml + result.total_blue_ml + result.total_dark_ml
+        result = connection.execute(sqlalchemy.text("SELECT COALESCE(SUM(quantity_delta), 0) total_potions FROM potion_ledger_entries")).first()
+        total_potions = result.total_potions
     
     return {"number_of_potions": total_potions, "ml_in_barrels": ml_per_barrel, "gold": gold_total}
 

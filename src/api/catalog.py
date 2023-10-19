@@ -14,12 +14,17 @@ def get_catalog():
     """
 
     # Can return a max of 20 items.
-    # query database for num of red potions in DB
     potion_list = []
 
     with db.engine.begin() as connection:
         # get all of the potions that are not 0
-        result = connection.execute(sqlalchemy.text("SELECT * FROM potion_catalog WHERE quantity != 0"))
+
+        #join the two tables to get the quantity 
+        result = connection.execute(sqlalchemy.text(
+            """SELECT quantity_delta 
+            FROM potion_ledger_ 
+            WHERE quantity != 0
+            """))
 
         potion_inventory_data = result.fetchall()
 
@@ -27,7 +32,7 @@ def get_catalog():
         potion_list.append({
             "sku": potion.sku,
             "name": potion.sku,
-            "quantity": potion.quantity,
+            "quantity": potion.quantity, #doesn't exist anymore
             "price": potion.cost,
             "potion_type": [potion.red_ml, potion.green_ml, potion.blue_ml, potion.dark_ml],
         })
