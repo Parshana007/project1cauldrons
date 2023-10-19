@@ -29,10 +29,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]): #gives me a total num
     print("post_deliver_barrels:barrels_delivered ", barrels_delivered)
 
     gold_count = 0
-    updated_red_ml = 0
-    updated_green_ml = 0
-    updated_blue_ml = 0
-    updated_dark_ml = 0
+    updated_red_ml, updated_green_ml, updated_blue_ml, updated_dark_ml  = 0, 0, 0, 0
 
     for barrel in barrels_delivered:
         gold_count += barrel.price * barrel.quantity
@@ -54,26 +51,18 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]): #gives me a total num
         print("post_deliver_barrels: dark_ml ", updated_dark_ml)
 
     with db.engine.begin() as connection:
-        connection.execute(
-            sqlalchemy.text(
-                """
-                UPDATE global_inventory SET 
-                num_red_ml = num_red_ml + :updated_red_ml,
-                num_green_ml = num_green_ml + :updated_green_ml,
-                num_blue_ml = num_blue_ml + :updated_blue_ml,
-                num_dark_ml = num_dark_ml + :updated_dark_ml,
-                gold = gold - :gold_count
-                """
-                ),
-            [{"updated_red_ml": updated_red_ml, "updated_green_ml": updated_green_ml, "updated_blue_ml": updated_blue_ml, "updated_dark_ml": updated_dark_ml, "gold_count": gold_count}])
-
-
-        print("post_deliver_barrels: gold_amount ", gold_count)
-        print("post_deliver_barrels: red_ml ", updated_red_ml)
-        print("post_deliver_barrels: green_ml ", updated_green_ml)
-        print("post_deliver_barrels: blue_ml ", updated_blue_ml)
-        print("post_deliver_barrels: dark_ml ", updated_dark_ml)
-        # print("post_deliver_barrels: barrel.potion_type", barrel.potion_type)
+        connection.execute(sqlalchemy.text(
+            """
+            INSERT INTO barrel_ledger_entries (red_ml_delta,green_ml_delta, blue_ml_delta, dark_ml_delta)
+            VALUES (:updated_red_ml, :updated_green_ml, :updated_blue_ml, :updated_dark_ml)
+            """
+        ), [{"updated_red_ml": updated_red_ml, "updated_green_ml": updated_green_ml, "updated_blue_ml": updated_blue_ml, "updated_dark_ml": updated_dark_ml}])
+        connection.execute(sqlalchemy.text(
+            """
+            INSERT INTO gold_ledger_entries (gold_delta)
+            VALUES (:gold_count)
+            """
+        ), [{"gold_count": -gold_count}])
 
     return "OK"
 
