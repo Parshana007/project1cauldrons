@@ -24,26 +24,21 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
 
     for potion in potions_delivered:
         with db.engine.begin() as connection:
-            connection.execute(
-                sqlalchemy.text(
+            connection.execute(sqlalchemy.text(
                 """
-                UPDATE global_inventory SET 
-                num_red_ml = num_red_ml - :red_ml,
-                num_green_ml = num_green_ml - :green_ml,
-                num_blue_ml = num_blue_ml - :blue_ml,
-                num_dark_ml = num_dark_ml - :dark_ml
+                INSERT INTO barrel_ledger_entries (red_ml_delta,green_ml_delta, blue_ml_delta, dark_ml_delta)
+                VALUES (:red_ml, :green_ml, :blue_ml, :dark_ml)
                 """
-                ),
-            [{"red_ml": potion.potion_type[0], "green_ml": potion.potion_type[1], "blue_ml": potion.potion_type[2], "dark_ml": potion.potion_type[3]}])
+                ), 
+            [{"red_ml": -potion.potion_type[0], "green_ml": -potion.potion_type[1], "blue_ml": -potion.potion_type[2], "dark_ml": -potion.potion_type[3]}])
 
-            connection.execute( #based on the matching red_ml, green_ml, blue_ml, dark_ml updated that quantity
-                sqlalchemy.text(
+            connection.execute(sqlalchemy.text(
                 """
-                UPDATE potion_catalog SET
-                quantity = quantity + :quantity
-                WHERE red_ml = :red_ml AND green_ml = :green_ml AND blue_ml = :blue_ml AND dark_ml = :dark_ml
+                INSERT INTO potion_ledger_entries (potion_id, quantity_delta)
+                VALUES (
+                    (SELECT potion_id FROM potion_catalog WHERE red_ml = :red_ml AND green_ml = :green_ml AND blue_ml = :blue_ml AND dark_ml = :dark_ml), :quantity)
                 """
-                ),
+                ), 
             [{"quantity": potion.quantity, "red_ml": potion.potion_type[0], "green_ml": potion.potion_type[1], "blue_ml": potion.potion_type[2], "dark_ml": potion.potion_type[3]}])
             
     return "OK"
