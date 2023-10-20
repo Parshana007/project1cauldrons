@@ -30,7 +30,7 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
                 VALUES (:red_ml, :green_ml, :blue_ml, :dark_ml)
                 """
                 ), 
-            [{"red_ml": -potion.potion_type[0], "green_ml": -potion.potion_type[1], "blue_ml": -potion.potion_type[2], "dark_ml": -potion.potion_type[3]}])
+            [{"red_ml": -potion.potion_type[0] * potion.quantity, "green_ml": -potion.potion_type[1] * potion.quantity, "blue_ml": -potion.potion_type[2] * potion.quantity, "dark_ml": -potion.potion_type[3] * potion.quantity}])
 
             connection.execute(sqlalchemy.text(
                 """
@@ -80,21 +80,33 @@ def get_bottle_plan():
 
     print("get_bottle_plan: quantity_potions_result ", quantity_potions_result)
     total_quantity_sum = sum(item.quantity for item in quantity_potions_result)
+    total_quantity_make = 0
 
-    if total_quantity_sum < 6:
-        for potion in quantity_potions_result:
+    for potion in quantity_potions_result:
+        if total_quantity_sum < 6:
             print("get_bottle_plan: potion ",potion)
-            if potion.red_ml <= num_red_ml and potion.green_ml <= num_green_ml and potion.blue_ml <= num_blue_ml and potion.dark_ml <= num_dark_ml:
-
-                potions_list.append({
-                    "potion_type": [potion.red_ml, potion.green_ml, potion.blue_ml, potion.dark_ml],
-                    "quantity": 1
-                })
+            while potion.red_ml <= num_red_ml and potion.green_ml <= num_green_ml and potion.blue_ml <= num_blue_ml and potion.dark_ml <= num_dark_ml:
 
                 num_red_ml -= potion.red_ml
                 num_green_ml -= potion.green_ml
                 num_blue_ml -= potion.blue_ml
                 num_dark_ml -= potion.dark_ml
+
+                print("get_bottle_plan: num_red_ml ", num_red_ml)
+                print("get_bottle_plan: num_green_ml ", num_green_ml)
+                print("get_bottle_plan: num_blue_ml ", num_blue_ml)
+                print("get_bottle_plan: num_dark_ml ", num_dark_ml)
+
+                total_quantity_make += 1
+                print("total_quantity_make", total_quantity_make)
+
+            if total_quantity_make != 0:
+                potions_list.append({
+                    "potion_type": [potion.red_ml, potion.green_ml, potion.blue_ml, potion.dark_ml],
+                    "quantity": total_quantity_make
+                })
+            total_quantity_sum += total_quantity_make
+            total_quantity_make = 0
 
         print("get_bottle_plan: num_red_ml ", num_red_ml)
         print("get_bottle_plan: num_green_ml ", num_green_ml)
