@@ -139,5 +139,15 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         total_gold_paid += cart_to_buy.count_to_buy * potion_info.cost
         print("checkout: total_potions_bought ", total_potions_bought)
         print("checkout: total_gold_paid ", total_gold_paid)
+    
+    with db.engine.begin() as connection:
+        connection.execute(
+            sqlalchemy.text(
+                """
+                UPDATE carts 
+                SET bought = true
+                WHERE carts.cart_id = :cart_id
+                """
+        ), {"cart_id": cart_id})
 
     return {"total_potions_bought": total_potions_bought, "total_gold_paid": total_gold_paid}
