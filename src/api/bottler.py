@@ -69,7 +69,6 @@ def get_bottle_plan():
             FROM potion_ledger_entries
             RIGHT JOIN potion_catalog ON potion_ledger_entries.potion_id = potion_catalog.potion_id
             GROUP BY potion_catalog.potion_id
-            HAVING SUM(potion_ledger_entries.quantity_delta) is NULL OR SUM(potion_ledger_entries.quantity_delta) = 0
             """)).fetchall()
 
     num_red_ml = num_ml_data.num_red_ml
@@ -80,25 +79,27 @@ def get_bottle_plan():
     potions_list = []
 
     print("get_bottle_plan: quantity_potions_result ", quantity_potions_result)
+    total_quantity_sum = sum(item.quantity for item in quantity_potions_result)
 
-    for potion in quantity_potions_result:
-        print("get_bottle_plan: potion ",potion)
-        if potion.red_ml <= num_red_ml and potion.green_ml <= num_green_ml and potion.blue_ml <= num_blue_ml and potion.dark_ml <= num_dark_ml:
+    if total_quantity_sum < 6:
+        for potion in quantity_potions_result:
+            print("get_bottle_plan: potion ",potion)
+            if potion.red_ml <= num_red_ml and potion.green_ml <= num_green_ml and potion.blue_ml <= num_blue_ml and potion.dark_ml <= num_dark_ml:
 
-            potions_list.append({
-                "potion_type": [potion.red_ml, potion.green_ml, potion.blue_ml, potion.dark_ml],
-                "quantity": 1
-            })
+                potions_list.append({
+                    "potion_type": [potion.red_ml, potion.green_ml, potion.blue_ml, potion.dark_ml],
+                    "quantity": 1
+                })
 
-            num_red_ml -= potion.red_ml
-            num_green_ml -= potion.green_ml
-            num_blue_ml -= potion.blue_ml
-            num_dark_ml -= potion.dark_ml
+                num_red_ml -= potion.red_ml
+                num_green_ml -= potion.green_ml
+                num_blue_ml -= potion.blue_ml
+                num_dark_ml -= potion.dark_ml
 
-    print("get_bottle_plan: num_red_ml ", num_red_ml)
-    print("get_bottle_plan: num_green_ml ", num_green_ml)
-    print("get_bottle_plan: num_blue_ml ", num_blue_ml)
-    print("get_bottle_plan: num_dark_ml ", num_dark_ml)
-    print("get_bottle_plan: potions_list ", potions_list)
+        print("get_bottle_plan: num_red_ml ", num_red_ml)
+        print("get_bottle_plan: num_green_ml ", num_green_ml)
+        print("get_bottle_plan: num_blue_ml ", num_blue_ml)
+        print("get_bottle_plan: num_dark_ml ", num_dark_ml)
+        print("get_bottle_plan: potions_list ", potions_list)
 
     return potions_list
