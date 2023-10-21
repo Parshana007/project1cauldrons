@@ -33,12 +33,13 @@ def get_catalog():
         potion_inventory_data = result.fetchall()
 
     for potion in potion_inventory_data:
-        potion_list.append({
-            "sku": potion.sku,
-            "name": potion.sku,
-            "quantity": potion.quantity, 
-            "price": potion.cost,
-            "potion_type": [potion.red_ml, potion.green_ml, potion.blue_ml, potion.dark_ml],
-        })
+        if potion.quantity != 0: 
+            potion_list.append({
+                "sku": potion.sku,
+                "name": potion.sku,
+                "quantity": potion.quantity, 
+                "price": potion.cost,
+                "potion_type": [potion.red_ml, potion.green_ml, potion.blue_ml, potion.dark_ml],
+            })
 
     return potion_list
