@@ -83,7 +83,7 @@ def get_bottle_plan():
     total_quantity_make = 0
 
     for potion in quantity_potions_result:
-        if total_quantity_sum < 6:
+        if total_quantity_sum < 6 and potion.quantity < 2:
             print("get_bottle_plan: potion ",potion)
             while potion.red_ml <= num_red_ml and potion.green_ml <= num_green_ml and potion.blue_ml <= num_blue_ml and potion.dark_ml <= num_dark_ml and total_quantity_make < 6:
 
