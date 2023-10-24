@@ -42,11 +42,18 @@ def search_orders(
     #     "next_page_token" : next_page_token,
     #     "result" : final_line_items,
     # }
+    final_result_items = []
+
+    for item in sorted_line_items:
+        item_combined_sku = str(item.count_bought) + item.item_sku
+        final_result_items.append(
+            {"line_id": item.line_id, "customer_name": item.customer_name, "item_sku": item_combined_sku, "line_item_total": item.line_item_total, "timestamp": item.timestamp}
+        )
 
     return {
         "previous": "",
         "next": "",
-        "results": sorted_line_items
+        "results": final_result_items
     }
 
     """
