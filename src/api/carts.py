@@ -35,28 +35,26 @@ def search_orders(
     line_items = cart_line_items(line_items_query)
     filter_line_items = filtering(line_items, customer_name, potion_sku)
     sorted_line_items = sorting_col(filter_line_items, sort_col, sort_order)
-    # prev_page_token, next_page_token, final_line_items = pagination_cart_items(sorted_line_items)
+    prev_page_token, next_page_token, final_line_items = pagination_cart_items(sorted_line_items, search_page)
 
     # return {
     #     "prev_page_token" : prev_page_token,
     #     "next_page_token" : next_page_token,
     #     "result" : final_line_items,
     # }
-    print("line_items", line_items)
-    print("filter_line_items", filter_line_items)
-    print("sorted_line_items", sorted_line_items)
+    print("sorted_line_items      ", sorted_line_items)
 
     final_result_items = []
 
-    for item in sorted_line_items:
+    for item in final_line_items:
         item_combined_sku = str(item["count_bought"]) + " " + item["item_sku"]
         final_result_items.append(
             {"line_id": item["line_id"], "customer_name": item["customer_name"], "item_sku": item_combined_sku, "line_item_total": item["line_item_total"], "timestamp": item["timestamp"]}
         )
 
     return {
-        "previous": "",
-        "next": "",
+        "previous": prev_page_token,
+        "next": next_page_token,
         "results": final_result_items
     }
 
@@ -147,11 +145,34 @@ def sorting_col(line_items, sort_col, sort_order):
     return sorted(line_items, key=lambda line: line[sort_col], reverse=reversing)
 
 def pagination_cart_items(line_items, search_page):
-    # can only display 5 cart_items at a time
-    # returns a next_page_token, pre_page_token, and only 5 items from the line_items
-    # TODO what the heck this do
-    
-    pass
+
+    # assume search_page is a string now but is the string form of an int 
+    # 1. convert to int
+    # 2. page_size = 5 bc can only display 5 items at a time
+    # 3. find the range from the start index to the last index with the page size
+    # ex. if there are 14 things then when search_page = 0 then [1, 2, 3, 4, 5] are displayed when search_page = 1 then [6, 7, 8, 9, 10] displayed
+    # ex. seach_page = 2 [11, 12, 13, 14]
+    # ex. next_page = search_page + 1 since there are still 5 more thing to display and pre_page = search_page - 1 or the current one
+    # 4. calculate the next_page, and prev_page return these values
+    # 5. return the slicing of what can currently pass in...
+
+    search_page = int(search_page)
+    page_size = 5
+    start_index = search_page * page_size
+    end_index = start_index + page_size
+
+    if end_index + 1 >= len(line_items):
+        end_index = -1
+        next_page = ""
+    else:
+        next_page = str(search_page + 1)
+
+    if search_page == 0:
+        prev_page = ""
+    else:
+        prev_page = str(search_page - 1)
+
+    return prev_page, next_page, line_items[start_index:end_index]
 
 class NewCart(BaseModel):
     customer: str
