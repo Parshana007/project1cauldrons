@@ -22,24 +22,24 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     print("post_deliver_bottles: potions_delivered", potions_delivered)
 
 
-    for potion in potions_delivered:
-        with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text(
-                """
-                INSERT INTO barrel_ledger_entries (red_ml_delta,green_ml_delta, blue_ml_delta, dark_ml_delta)
-                VALUES (:red_ml, :green_ml, :blue_ml, :dark_ml)
-                """
-                ), 
-            [{"red_ml": -potion.potion_type[0] * potion.quantity, "green_ml": -potion.potion_type[1] * potion.quantity, "blue_ml": -potion.potion_type[2] * potion.quantity, "dark_ml": -potion.potion_type[3] * potion.quantity}])
+    with db.engine.begin() as connection:
+        for potion in potions_delivered:
+                connection.execute(sqlalchemy.text(
+                    """
+                    INSERT INTO barrel_ledger_entries (red_ml_delta,green_ml_delta, blue_ml_delta, dark_ml_delta)
+                    VALUES (:red_ml, :green_ml, :blue_ml, :dark_ml)
+                    """
+                    ), 
+                [{"red_ml": -potion.potion_type[0] * potion.quantity, "green_ml": -potion.potion_type[1] * potion.quantity, "blue_ml": -potion.potion_type[2] * potion.quantity, "dark_ml": -potion.potion_type[3] * potion.quantity}])
 
-            connection.execute(sqlalchemy.text(
-                """
-                INSERT INTO potion_ledger_entries (potion_id, quantity_delta)
-                VALUES (
-                    (SELECT potion_id FROM potion_catalog WHERE red_ml = :red_ml AND green_ml = :green_ml AND blue_ml = :blue_ml AND dark_ml = :dark_ml), :quantity)
-                """
-                ), 
-            [{"quantity": potion.quantity, "red_ml": potion.potion_type[0], "green_ml": potion.potion_type[1], "blue_ml": potion.potion_type[2], "dark_ml": potion.potion_type[3]}])
+                connection.execute(sqlalchemy.text(
+                    """
+                    INSERT INTO potion_ledger_entries (potion_id, quantity_delta)
+                    VALUES (
+                        (SELECT potion_id FROM potion_catalog WHERE red_ml = :red_ml AND green_ml = :green_ml AND blue_ml = :blue_ml AND dark_ml = :dark_ml), :quantity)
+                    """
+                    ), 
+                [{"quantity": potion.quantity, "red_ml": potion.potion_type[0], "green_ml": potion.potion_type[1], "blue_ml": potion.potion_type[2], "dark_ml": potion.potion_type[3]}])
             
     return "OK"
 
