@@ -42,6 +42,9 @@ def search_orders(
     #     "next_page_token" : next_page_token,
     #     "result" : final_line_items,
     # }
+    return {
+        "result": sorted_line_items
+    }
 
     """
     Search for cart line items by customer name and/or potion sku.
@@ -132,7 +135,7 @@ def sorting_col(line_items, sort_col, sort_order):
 def pagination_cart_items(line_items, search_page):
     # can only display 5 cart_items at a time
     # returns a next_page_token, pre_page_token, and only 5 items from the line_items
-    
+    # TODO what the heck this do
     
     pass
 
