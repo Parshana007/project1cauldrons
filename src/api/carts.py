@@ -33,8 +33,8 @@ def search_orders(
     
     line_items_query = cart_line_items_query()
     line_items = cart_line_items(line_items_query)
-    filter_line_items = filtering(line_items)
-    sorted_line_items = sorting_col(filter_line_items)
+    filter_line_items = filtering(line_items, customer_name, potion_sku)
+    sorted_line_items = sorting_col(filter_line_items, sort_col, sort_order)
     # prev_page_token, next_page_token, final_line_items = pagination_cart_items(sorted_line_items)
 
     # return {
