@@ -43,6 +43,8 @@ def search_orders(
     #     "result" : final_line_items,
     # }
     return {
+        "prev_page_token" : "",
+        "next_page_token" : "",
         "result": sorted_line_items
     }
 
