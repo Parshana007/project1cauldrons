@@ -155,17 +155,18 @@ def pagination_cart_items(line_items, search_page):
     # ex. next_page = search_page + 1 since there are still 5 more thing to display and pre_page = search_page - 1 or the current one
     # 4. calculate the next_page, and prev_page return these values
     # 5. return the slicing of what can currently pass in...
-
+    
     if search_page == "":
         search_page = 0
     else: 
         search_page = int(search_page)
+    
     page_size = 5
     start_index = search_page * page_size
     end_index = start_index + page_size
 
     if end_index + 1 >= len(line_items):
-        end_index = -1
+        end_index = len(line_items) 
         next_page = ""
     else:
         next_page = str(search_page + 1)
