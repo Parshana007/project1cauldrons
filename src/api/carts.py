@@ -42,10 +42,11 @@ def search_orders(
     #     "next_page_token" : next_page_token,
     #     "result" : final_line_items,
     # }
+
     return {
-        "prev_page_token" : "",
-        "next_page_token" : "",
-        "result": sorted_line_items
+        "previous": "",
+        "next": "",
+        "results": sorted_line_items
     }
 
     """
