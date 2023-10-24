@@ -33,7 +33,15 @@ def search_orders(
     
     line_items_query = cart_line_items_query()
     line_items = cart_line_items(line_items_query)
+    filter_line_items = filtering(line_items)
+    sorted_line_items = sorting_col(filter_line_items)
+    # prev_page_token, next_page_token, final_line_items = pagination_cart_items(sorted_line_items)
 
+    # return {
+    #     "prev_page_token" : prev_page_token,
+    #     "next_page_token" : next_page_token,
+    #     "result" : final_line_items,
+    # }
 
     """
     Search for cart line items by customer name and/or potion sku.
@@ -58,13 +66,6 @@ def search_orders(
     customer name, line item total (in gold), and timestamp of the order.
     Your results must be paginated, the max results you can return at any
     time is 5 total line items.
-
-    return {
-        "prev_page_token" : prev_page_token,
-        "next_page_token" : next_page_token,
-        "result" : final_result_array,
-    }
-
 
     """
 def cart_line_items_query():
@@ -98,10 +99,10 @@ def cart_line_items(cart_items_query):
 
     for line in cart_items_query:
         counter +=1
-        gold = line[5] * line[4]
+        gold = line[4] * line[5]
 
         line_items.append(
-            {"line_id": counter, "customer": line[1], "item": line[3], "gold": gold, "time": line[2]}
+            {"line_id": counter, "customer_name": line[1], "count_bought": line[4] ,"item_sku": line[3], "line_item_total": gold, "timestamp": line[2]}
         )
 
     return line_items
@@ -109,14 +110,11 @@ def cart_line_items(cart_items_query):
 def filtering(line_items, customer_name, potion_sku):
     # this function will take in a name and potion one can be a blank str and sort given list of customers
     # returns back an array of dictonaries that is filtered by criteria
-    # if customer_name == "" or potion_sku == "":
-    #     return line_items
-    # return list(filter(lambda line: line["customer"] == customer_name and line["item"] == potion_sku, line_items))
     if customer_name == "" or potion_sku == "":
         return line_items
 
     for line in line_items:
-        if line["customer"] == customer_name and line["item"] == potion_sku:
+        if line["customer_name"] == customer_name and line["item_sku"] == potion_sku:
             return [line]
         
     return line_items
@@ -124,11 +122,18 @@ def filtering(line_items, customer_name, potion_sku):
 def sorting_col(line_items, sort_col, sort_order):
     # given an array of dictionaries sort by given sort_col and sort_order
     # return back an array of dictionaries that is sorted by the criteria
-    pass
+    if sort_order == "asc":
+        reversing = False
+    elif sort_order == "desc":
+        reversing = True
+    
+    return sorted(line_items, key=lambda line: line[sort_col], reverse=reversing)
 
 def pagination_cart_items(line_items, search_page):
     # can only display 5 cart_items at a time
     # returns a next_page_token, pre_page_token, and only 5 items from the line_items
+    
+    
     pass
 
 class NewCart(BaseModel):
