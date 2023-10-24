@@ -31,7 +31,10 @@ def search_orders(
     sort_order: search_sort_order = search_sort_order.desc,
 ):
     
-    line_items = cart_line_items()
+    line_items_query = cart_line_items_query()
+    line_items = cart_line_items(line_items_query)
+
+
     """
     Search for cart line items by customer name and/or potion sku.
 
@@ -104,9 +107,19 @@ def cart_line_items(cart_items_query):
     return line_items
 
 def filtering(line_items, customer_name, potion_sku):
-    # this function will take in a name and/ or potion one can be a blank str and sort given list of customers
+    # this function will take in a name and potion one can be a blank str and sort given list of customers
     # returns back an array of dictonaries that is filtered by criteria
-    pass
+    # if customer_name == "" or potion_sku == "":
+    #     return line_items
+    # return list(filter(lambda line: line["customer"] == customer_name and line["item"] == potion_sku, line_items))
+    if customer_name == "" or potion_sku == "":
+        return line_items
+
+    for line in line_items:
+        if line["customer"] == customer_name and line["item"] == potion_sku:
+            return [line]
+        
+    return line_items
 
 def sorting_col(line_items, sort_col, sort_order):
     # given an array of dictionaries sort by given sort_col and sort_order
