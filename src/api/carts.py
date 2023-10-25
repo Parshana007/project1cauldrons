@@ -128,12 +128,13 @@ def filtering(line_items, customer_name, potion_sku):
     if customer_name == "" or potion_sku == "":
         return line_items
 
+    filtered_lines = []
     for line in line_items:
         customer_name = customer_name.lower()
         potion_sku = potion_sku.lower()
 
         if customer_name in line["customer_name"].lower() and potion_sku in line["item_sku"].lower() :
-            return [line]
+            filtered_lines.append(line)
         
     return line_items
 
