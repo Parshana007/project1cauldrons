@@ -136,7 +136,9 @@ def filtering(line_items, customer_name, potion_sku):
         if customer_name in line["customer_name"].lower() and potion_sku in line["item_sku"].lower() :
             filtered_lines.append(line)
         
-    return line_items
+    if len(filtered_lines) == 0:
+        return line_items
+    return filtered_lines
 
 def sorting_col(line_items, sort_col, sort_order):
     # given an array of dictionaries sort by given sort_col and sort_order
