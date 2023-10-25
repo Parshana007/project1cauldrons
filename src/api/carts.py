@@ -125,7 +125,7 @@ def cart_line_items(cart_items_query):
 def filtering(line_items, customer_name, potion_sku):
     # this function will take in a name and potion one can be a blank str and sort given list of customers
     # returns back an array of dictonaries that is filtered by criteria
-    if customer_name == "" or potion_sku == "":
+    if customer_name == "" and potion_sku == "":
         return line_items
 
     filtered_lines = []
@@ -135,9 +135,9 @@ def filtering(line_items, customer_name, potion_sku):
 
         if customer_name in line["customer_name"].lower() and potion_sku in line["item_sku"].lower():
             filtered_lines.append(line)
-        elif customer_name in line["customer_name"].lower() and potion_sku == "":
+        if customer_name in line["customer_name"].lower() and potion_sku == "":
             filtered_lines.append(line)
-        elif potion_sku in line["item_sku"].lower() and customer_name == "":
+        if potion_sku in line["item_sku"].lower() and customer_name == "":
             filtered_lines.append(line)
         
     if len(filtered_lines) == 0:
