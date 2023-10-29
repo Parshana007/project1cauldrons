@@ -41,12 +41,14 @@ def search_orders(
         potion_catalog.cost AS cost_of_potion,
         cart_items.count_to_buy,
         CONCAT(cart_items.count_to_buy, ' ', cart_items.sku) AS item_sku, 
-        cart_items.count_to_buy * potion_catalog.cost AS gold
+        cart_items.count_to_buy * potion_catalog.cost AS line_item_total
     FROM cart_items
     JOIN carts ON carts.cart_id = cart_items.cart_id
     JOIN potion_catalog ON cart_items.sku = potion_catalog.sku
     """
 
+
+    # FILTERING
     if customer_name != "":
         customer_name_param = '%' + customer_name + '%'
         sql_to_execute += "WHERE customer_name ILIKE :customer_name_param"
@@ -59,6 +61,20 @@ def search_orders(
             sql_to_execute += " AND potion_catalog.sku ILIKE :potion_name_param"
         params["potion_name_param"] = potion_name_param
 
+    # SORTING
+    sql_to_execute += "ORDER BY " + sort_col + " " + sort_order.upper()
+
+    # sql_to_execute += "ORDER BY :sorting_col :sorting_direc"
+    # params["sorting_col"] = sort_col
+    # params["sorting_direc"] = sort_order.upper()
+
+    # PAGINATION
+
+
+
+
+
+
 
     with db.engine.begin() as connection:
         sql_result = connection.execute(sqlalchemy.text(sql_to_execute), params).fetchall() 
@@ -70,9 +86,9 @@ def search_orders(
         counter_id += 1
         final_result_items.append({
                 "line_item_id": counter_id,
-                "item_sku": line.item_sku,
-                "customer_name": line.customer_name,
-                "line_item_total": counter_id,
+                "item_sku": line.item_sku, # sku + count_to_buy
+                "customer_name": line.customer_name, 
+                "line_item_total": line.line_item_total, #gold
                 "timestamp": line.timestamp,
         })
 
