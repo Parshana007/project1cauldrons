@@ -32,9 +32,11 @@ def search_orders(
 ):
 
     params = {}
+    page_size = 5
 
     sql_to_execute = """
-    SELECT cart_items.cart_id, 
+    SELECT cart_items.entry_id AS entry_id,
+        cart_items.cart_id, 
         carts.customer_name AS customer_name,
         cart_items.timestamp AS timestamp, 
         cart_items.count_to_buy AS potion_count, 
@@ -47,7 +49,6 @@ def search_orders(
     JOIN potion_catalog ON cart_items.sku = potion_catalog.sku
     """
 
-
     # FILTERING
     if customer_name != "":
         customer_name_param = '%' + customer_name + '%'
@@ -56,36 +57,66 @@ def search_orders(
     if potion_sku != "":
         potion_name_param = '%' + potion_sku + '%'
         if "WHERE" not in sql_to_execute:
-            sql_to_execute += "WHERE sku ILIKE :potion_name_param"
+            sql_to_execute += "WHERE potion_catalog.sku ILIKE :potion_name_param"
         else:
             sql_to_execute += " AND potion_catalog.sku ILIKE :potion_name_param"
         params["potion_name_param"] = potion_name_param
 
     # SORTING
-    sql_to_execute += "ORDER BY " + sort_col + " " + sort_order.upper()
+    sql_to_execute +=  " " + "ORDER BY " + sort_col + " " + sort_order.upper() + " "
 
     # sql_to_execute += "ORDER BY :sorting_col :sorting_direc"
     # params["sorting_col"] = sort_col
     # params["sorting_direc"] = sort_order.upper()
 
-    # PAGINATION
-
-
-
-
-
-
+    
 
     with db.engine.begin() as connection:
+        # PAGINATION
+        # count_rows = connection.execute(sqlalchemy.text("SELECT COUNT(*) total_rows FROM cart_items")).first()
+        # print("count_rows.total_rows", count_rows.total_rows)
+
+        if search_page == "":
+            search_page = 0
+        else: 
+            search_page = int(search_page)
+    
+        start_index = search_page * page_size
+        end_index = start_index + page_size
+
+        # if end_index + 1 >= count_rows.total_rows:
+        #     end_index = count_rows.total_rows
+        #     next_page = ""
+        # else:
+        #     next_page = str(search_page + 1)
+
+        if search_page == 0:
+            prev_page = ""
+        else:
+            prev_page = str(search_page - 1)
+
+        print(start_index)
+
+        sql_to_execute += "LIMIT 5 OFFSET :offset"
+        params["offset"] = start_index
+
+
         sql_result = connection.execute(sqlalchemy.text(sql_to_execute), params).fetchall() 
-        
+
+        if len(sql_result) < 5:
+            next_page = ""
+        else:
+            next_page = str(search_page + 1)
+
+        print("len(sql_result)", len(sql_result))
+        print(prev_page)
+        print(next_page)
+
     final_result_items = []
-    counter_id = 0
 
     for line in sql_result:
-        counter_id += 1
         final_result_items.append({
-                "line_item_id": counter_id,
+                "line_item_id": line.entry_id,
                 "item_sku": line.item_sku, # sku + count_to_buy
                 "customer_name": line.customer_name, 
                 "line_item_total": line.line_item_total, #gold
@@ -93,8 +124,8 @@ def search_orders(
         })
 
     return {
-        "previous": "",
-        "next": "",
+        "previous": prev_page,
+        "next": next_page,
         "results": final_result_items
     }
 
@@ -124,37 +155,6 @@ def search_orders(
 
     """
 
-# def filtering(line_items, customer_name, potion_sku):
-#     # this function will take in a name and potion one can be a blank str and sort given list of customers
-#     # returns back an array of dictonaries that is filtered by criteria
-#     if customer_name == "" and potion_sku == "":
-#         return line_items
-
-#     filtered_lines = []
-#     for line in line_items:
-#         customer_name = customer_name.lower()
-#         potion_sku = potion_sku.lower()
-
-#         if customer_name in line["customer_name"].lower() and potion_sku in line["item_sku"].lower():
-#             filtered_lines.append(line)
-#         if customer_name in line["customer_name"].lower() and potion_sku == "":
-#             filtered_lines.append(line)
-#         if potion_sku in line["item_sku"].lower() and customer_name == "":
-#             filtered_lines.append(line)
-        
-#     if len(filtered_lines) == 0:
-#         return line_items
-#     return filtered_lines
-
-def sorting_col(line_items, sort_col, sort_order):
-    # given an array of dictionaries sort by given sort_col and sort_order
-    # return back an array of dictionaries that is sorted by the criteria
-    if sort_order == "asc":
-        reversing = False
-    elif sort_order == "desc":
-        reversing = True
-    
-    return sorted(line_items, key=lambda line: line[sort_col], reverse=reversing)
 
 def pagination_cart_items(line_items, search_page):
 
