@@ -30,31 +30,55 @@ def search_orders(
     sort_col: search_sort_options = search_sort_options.timestamp,
     sort_order: search_sort_order = search_sort_order.desc,
 ):
-    
-    line_items_query = cart_line_items_query()
-    line_items = cart_line_items(line_items_query)
-    filter_line_items = filtering(line_items, customer_name, potion_sku)
-    sorted_line_items = sorting_col(filter_line_items, sort_col, sort_order)
-    prev_page_token, next_page_token, final_line_items = pagination_cart_items(sorted_line_items, search_page)
 
-    # return {
-    #     "prev_page_token" : prev_page_token,
-    #     "next_page_token" : next_page_token,
-    #     "result" : final_line_items,
-    # }
-    print("sorted_line_items      ", sorted_line_items)
+    params = {}
 
+    sql_to_execute = """
+    SELECT cart_items.cart_id, 
+        carts.customer_name AS customer_name,
+        cart_items.timestamp AS timestamp, 
+        cart_items.count_to_buy AS potion_count, 
+        potion_catalog.cost AS cost_of_potion,
+        cart_items.count_to_buy,
+        CONCAT(cart_items.count_to_buy, ' ', cart_items.sku) AS item_sku, 
+        cart_items.count_to_buy * potion_catalog.cost AS gold
+    FROM cart_items
+    JOIN carts ON carts.cart_id = cart_items.cart_id
+    JOIN potion_catalog ON cart_items.sku = potion_catalog.sku
+    """
+
+    if customer_name != "":
+        customer_name_param = '%' + customer_name + '%'
+        sql_to_execute += "WHERE customer_name ILIKE :customer_name_param"
+        params["customer_name_param"] = customer_name_param
+    if potion_sku != "":
+        potion_name_param = '%' + potion_sku + '%'
+        if "WHERE" not in sql_to_execute:
+            sql_to_execute += "WHERE sku ILIKE :potion_name_param"
+        else:
+            sql_to_execute += " AND potion_catalog.sku ILIKE :potion_name_param"
+        params["potion_name_param"] = potion_name_param
+
+
+    with db.engine.begin() as connection:
+        sql_result = connection.execute(sqlalchemy.text(sql_to_execute), params).fetchall() 
+        
     final_result_items = []
+    counter_id = 0
 
-    for item in final_line_items:
-        item_combined_sku = str(item["count_bought"]) + " " + item["item_sku"]
-        final_result_items.append(
-            {"line_id": item["line_id"], "customer_name": item["customer_name"], "item_sku": item_combined_sku, "line_item_total": item["line_item_total"], "timestamp": item["timestamp"]}
-        )
+    for line in sql_result:
+        counter_id += 1
+        final_result_items.append({
+                "line_item_id": counter_id,
+                "item_sku": line.item_sku,
+                "customer_name": line.customer_name,
+                "line_item_total": counter_id,
+                "timestamp": line.timestamp,
+        })
 
     return {
-        "previous": prev_page_token,
-        "next": next_page_token,
+        "previous": "",
+        "next": "",
         "results": final_result_items
     }
 
@@ -83,66 +107,28 @@ def search_orders(
     time is 5 total line items.
 
     """
-def cart_line_items_query():
-    # attributes of the array of dictionaries: id [make this a counter], customer_name, item_sku, gold, time
-    # here I want to join the cart, cart-items, potion_ledger, and potion_catalog
-    # from a specific cart I need to get: customer, item, gold, time
-    # customer = customer_name found in cart table
-    # item = count_to_buy and potion sku from cart_items [make a list of all potions from specific customer]
-    # gold = take the total potion of a particular sku multiply by cost from potion_catalog [repeat for all potions]
-    # time = from cart_items timestamp
-    # return back an array of dictionaries
-    with db.engine.begin() as connection:
-        cart_items_query = connection.execute(sqlalchemy.text(
-            """
-            SELECT cart_items.cart_id, 
-                    carts.customer_name AS name,
-                    cart_items.timestamp AS time, 
-                    cart_items.sku AS potion_sku, 
-                    cart_items.count_to_buy AS potion_count, 
-                    potion_catalog.cost AS cost_of_potion
-            FROM cart_items
-            JOIN carts ON carts.cart_id = cart_items.cart_id
-            JOIN potion_catalog ON cart_items.sku = potion_catalog.sku
-            """)).fetchall() #remember each line is a tuple returned where the entire fetchall is an array of tuples
-    
-    return cart_items_query
 
-def cart_line_items(cart_items_query):
-    line_items = []
-    counter = 0
+# def filtering(line_items, customer_name, potion_sku):
+#     # this function will take in a name and potion one can be a blank str and sort given list of customers
+#     # returns back an array of dictonaries that is filtered by criteria
+#     if customer_name == "" and potion_sku == "":
+#         return line_items
 
-    for line in cart_items_query:
-        counter +=1
-        gold = line[4] * line[5]
+#     filtered_lines = []
+#     for line in line_items:
+#         customer_name = customer_name.lower()
+#         potion_sku = potion_sku.lower()
 
-        line_items.append(
-            {"line_id": counter, "customer_name": line[1], "count_bought": line[4] ,"item_sku": line[3], "line_item_total": gold, "timestamp": line[2]}
-        )
-
-    return line_items
-
-def filtering(line_items, customer_name, potion_sku):
-    # this function will take in a name and potion one can be a blank str and sort given list of customers
-    # returns back an array of dictonaries that is filtered by criteria
-    if customer_name == "" and potion_sku == "":
-        return line_items
-
-    filtered_lines = []
-    for line in line_items:
-        customer_name = customer_name.lower()
-        potion_sku = potion_sku.lower()
-
-        if customer_name in line["customer_name"].lower() and potion_sku in line["item_sku"].lower():
-            filtered_lines.append(line)
-        if customer_name in line["customer_name"].lower() and potion_sku == "":
-            filtered_lines.append(line)
-        if potion_sku in line["item_sku"].lower() and customer_name == "":
-            filtered_lines.append(line)
+#         if customer_name in line["customer_name"].lower() and potion_sku in line["item_sku"].lower():
+#             filtered_lines.append(line)
+#         if customer_name in line["customer_name"].lower() and potion_sku == "":
+#             filtered_lines.append(line)
+#         if potion_sku in line["item_sku"].lower() and customer_name == "":
+#             filtered_lines.append(line)
         
-    if len(filtered_lines) == 0:
-        return line_items
-    return filtered_lines
+#     if len(filtered_lines) == 0:
+#         return line_items
+#     return filtered_lines
 
 def sorting_col(line_items, sort_col, sort_order):
     # given an array of dictionaries sort by given sort_col and sort_order
@@ -187,6 +173,11 @@ def pagination_cart_items(line_items, search_page):
         prev_page = str(search_page - 1)
 
     return prev_page, next_page, line_items[start_index:end_index]
+
+
+
+
+
 
 class NewCart(BaseModel):
     customer: str
