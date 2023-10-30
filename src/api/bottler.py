@@ -79,38 +79,47 @@ def get_bottle_plan():
     potions_list = []
 
     print("get_bottle_plan: quantity_potions_result ", quantity_potions_result)
-    # total_quantity_sum = sum(item.quantity for item in quantity_potions_result)
+    total_quantity_sum = sum(item.quantity for item in quantity_potions_result)
     total_quantity_make = 0
 
+    print("get_bottle_plan:total_quantity_sum", total_quantity_sum)
+    
     for potion in quantity_potions_result:
-        print("get_bottle_plan: potion ",potion)
-        while potion.red_ml <= num_red_ml and potion.green_ml <= num_green_ml and potion.blue_ml <= num_blue_ml and potion.dark_ml <= num_dark_ml:
+        if total_quantity_sum < 300:
+            print("get_bottle_plan: potion ",potion)
+            while potion.red_ml <= num_red_ml and potion.green_ml <= num_green_ml and potion.blue_ml <= num_blue_ml and potion.dark_ml <= num_dark_ml and total_quantity_sum < 300:
 
-            num_red_ml -= potion.red_ml
-            num_green_ml -= potion.green_ml
-            num_blue_ml -= potion.blue_ml
-            num_dark_ml -= potion.dark_ml
+                num_red_ml -= potion.red_ml
+                num_green_ml -= potion.green_ml
+                num_blue_ml -= potion.blue_ml
+                num_dark_ml -= potion.dark_ml
+
+                print("get_bottle_plan: num_red_ml ", num_red_ml)
+                print("get_bottle_plan: num_green_ml ", num_green_ml)
+                print("get_bottle_plan: num_blue_ml ", num_blue_ml)
+                print("get_bottle_plan: num_dark_ml ", num_dark_ml)
+
+                total_quantity_make += 1
+                total_quantity_sum += 1
+                print("get_bottle_plan:total_quantity_sum_inside", total_quantity_sum)
+
+                print("total_quantity_make", total_quantity_make)
+
+            if total_quantity_make != 0:
+                potions_list.append({
+                    "potion_type": [potion.red_ml, potion.green_ml, potion.blue_ml, potion.dark_ml],
+                    "quantity": total_quantity_make
+                })
+            #total_quantity_sum += total_quantity_make
+            print("get_bottle_plan:total_quantity_sum", total_quantity_sum)
+
+
+            total_quantity_make = 0
 
             print("get_bottle_plan: num_red_ml ", num_red_ml)
             print("get_bottle_plan: num_green_ml ", num_green_ml)
             print("get_bottle_plan: num_blue_ml ", num_blue_ml)
             print("get_bottle_plan: num_dark_ml ", num_dark_ml)
-
-            total_quantity_make += 1
-            print("total_quantity_make", total_quantity_make)
-
-        if total_quantity_make != 0:
-            potions_list.append({
-                "potion_type": [potion.red_ml, potion.green_ml, potion.blue_ml, potion.dark_ml],
-                "quantity": total_quantity_make
-            })
-        # total_quantity_sum += total_quantity_make
-        total_quantity_make = 0
-
-        print("get_bottle_plan: num_red_ml ", num_red_ml)
-        print("get_bottle_plan: num_green_ml ", num_green_ml)
-        print("get_bottle_plan: num_blue_ml ", num_blue_ml)
-        print("get_bottle_plan: num_dark_ml ", num_dark_ml)
-        print("get_bottle_plan: potions_list ", potions_list)
+            print("get_bottle_plan: potions_list ", potions_list)
 
     return potions_list

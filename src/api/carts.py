@@ -158,8 +158,6 @@ def create_cart(new_cart: NewCart):
 def get_cart(cart_id: int): 
     """ """ 
 
-    quantity_to_buy = 0
-    # SUM(cart_items.count_to_buy) AS quantity_to_buy
     with db.engine.begin() as connection:
         result = connection.execute(
             sqlalchemy.text(
@@ -173,7 +171,6 @@ def get_cart(cart_id: int):
     ), [{"cart_id": cart_id}]).first()
         
     print(result) # gives back (14, "Sammy", 3)
-        
         
     if result is not None:
         return {
