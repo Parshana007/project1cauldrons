@@ -4,9 +4,6 @@ from src import database as db
 
 router = APIRouter()
 
-# * this catalog is our own for each potion therefore has our own sku 
-# * while the barrels are from a wholesaler with their own sku
-
 @router.get("/catalog/", tags=["catalog"])
 def get_catalog():
     """
@@ -34,6 +31,8 @@ def get_catalog():
 
     for potion in potion_inventory_data:
         if potion.quantity != 0: 
+            if potion.quantity > 6:
+                potion.quantity = 6
             potion_list.append({
                 "sku": potion.sku,
                 "name": potion.sku,

@@ -63,18 +63,10 @@ def search_orders(
         params["potion_name_param"] = potion_name_param
 
     # SORTING
-    sql_to_execute +=  " " + "ORDER BY " + sort_col + " " + sort_order.upper() + " "
-
-    # sql_to_execute += "ORDER BY :sorting_col :sorting_direc"
-    # params["sorting_col"] = sort_col
-    # params["sorting_direc"] = sort_order.upper()
-
-    
+    sql_to_execute +=  " " + "ORDER BY " + sort_col + " " + sort_order.upper() + " "    
 
     with db.engine.begin() as connection:
         # PAGINATION
-        # count_rows = connection.execute(sqlalchemy.text("SELECT COUNT(*) total_rows FROM cart_items")).first()
-        # print("count_rows.total_rows", count_rows.total_rows)
 
         if search_page == "":
             search_page = 0
@@ -82,24 +74,15 @@ def search_orders(
             search_page = int(search_page)
     
         start_index = search_page * page_size
-        end_index = start_index + page_size
-
-        # if end_index + 1 >= count_rows.total_rows:
-        #     end_index = count_rows.total_rows
-        #     next_page = ""
-        # else:
-        #     next_page = str(search_page + 1)
 
         if search_page == 0:
             prev_page = ""
         else:
             prev_page = str(search_page - 1)
 
-        print(start_index)
 
         sql_to_execute += "LIMIT 5 OFFSET :offset"
         params["offset"] = start_index
-
 
         sql_result = connection.execute(sqlalchemy.text(sql_to_execute), params).fetchall() 
 
@@ -107,10 +90,6 @@ def search_orders(
             next_page = ""
         else:
             next_page = str(search_page + 1)
-
-        print("len(sql_result)", len(sql_result))
-        print(prev_page)
-        print(next_page)
 
     final_result_items = []
 
@@ -154,45 +133,6 @@ def search_orders(
     time is 5 total line items.
 
     """
-
-
-def pagination_cart_items(line_items, search_page):
-
-    # assume search_page is a string now but is the string form of an int 
-    # 1. convert to int
-    # 2. page_size = 5 bc can only display 5 items at a time
-    # 3. find the range from the start index to the last index with the page size
-    # ex. if there are 14 things then when search_page = 0 then [1, 2, 3, 4, 5] are displayed when search_page = 1 then [6, 7, 8, 9, 10] displayed
-    # ex. seach_page = 2 [11, 12, 13, 14]
-    # ex. next_page = search_page + 1 since there are still 5 more thing to display and pre_page = search_page - 1 or the current one
-    # 4. calculate the next_page, and prev_page return these values
-    # 5. return the slicing of what can currently pass in...
-    
-    if search_page == "":
-        search_page = 0
-    else: 
-        search_page = int(search_page)
-    
-    page_size = 5
-    start_index = search_page * page_size
-    end_index = start_index + page_size
-
-    if end_index + 1 >= len(line_items):
-        end_index = len(line_items) 
-        next_page = ""
-    else:
-        next_page = str(search_page + 1)
-
-    if search_page == 0:
-        prev_page = ""
-    else:
-        prev_page = str(search_page - 1)
-
-    return prev_page, next_page, line_items[start_index:end_index]
-
-
-
-
 
 
 class NewCart(BaseModel):
