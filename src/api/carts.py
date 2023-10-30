@@ -74,19 +74,23 @@ def search_orders(
             search_page = int(search_page)
     
         start_index = search_page * page_size
+        end_index = start_index + 5
 
         if search_page == 0:
             prev_page = ""
         else:
             prev_page = str(search_page - 1)
 
+        print(start_index)
+
+        total_rows = connection.execute(sqlalchemy.text(sql_to_execute), params).fetchall() 
+        total_row_count = len(total_rows)
 
         sql_to_execute += "LIMIT 5 OFFSET :offset"
         params["offset"] = start_index
 
         sql_result = connection.execute(sqlalchemy.text(sql_to_execute), params).fetchall() 
-
-        if len(sql_result) < 5:
+        if total_row_count <= end_index:
             next_page = ""
         else:
             next_page = str(search_page + 1)
