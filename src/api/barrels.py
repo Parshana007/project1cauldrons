@@ -110,7 +110,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
         print("get_wholesale_purchase_plan: quantity_to_purchase ", quantity_to_purchase)
 
-        if quantity_to_purchase > 0:
+        if quantity_to_purchase > 0 and barrel.potion_type != [1, 0, 0, 0]:
             for barrel_condition in barrel_conditions:
                 if quantity_to_purchase > barrel.quantity: #to maximize the num of barrels are bought
                     quantity_to_purchase = barrel.quantity
