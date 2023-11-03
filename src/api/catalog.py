@@ -35,7 +35,7 @@ def get_catalog():
         # print("potion_total_displayed", potion_total_displayed)
 
         if potion_quantity != 0 and potion_total_displayed < 7:
-            potion_total_displayed += potion_quantity
+            potion_total_displayed += 1
             potion_list.append({
                 "sku": potion.sku,
                 "name": potion.sku,
