@@ -32,10 +32,9 @@ def get_catalog():
 
     for potion in potion_inventory_data:
         potion_quantity = potion.quantity
-        print("potion_total_displayed", potion_total_displayed)
-        if potion_quantity != 0 and potion_total_displayed < 6: 
-            if potion_quantity > 6:
-                potion_quantity = 6
+        # print("potion_total_displayed", potion_total_displayed)
+
+        if potion_quantity != 0 and potion_total_displayed < 6:
             potion_total_displayed += potion_quantity
             potion_list.append({
                 "sku": potion.sku,
